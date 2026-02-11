@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #fef2f2;
+  --color-primary-100: #fee2e2;
+  --color-primary-200: #fecaca;
+  --color-primary-200: #fecaca;
+  --color-primary-300: #fca5a5;
+
+  /* Font Mappings */
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+
+  --color-primary-400: #f87171;
+  --color-primary-500: #b03030;
+  --color-primary-600: #9b2b2b;
+  --color-primary-700: #8b1d1d;
+  --color-primary-800: #6b1515;
+  --color-primary-900: #4b0f0f;
+  --color-primary: #8b1d1d;
+  --color-primary-light: #9b2b2b;
+  --color-primary-dark: #6b1515;
+
+  --color-gold-50: #fffdf0;
+  --color-gold-100: #fffae0;
+  --color-gold-200: #fff5c2;
+  --color-gold-300: #ffed99;
+  --color-gold-400: #ffe066;
+  --color-gold-500: #f4c430;
+  --color-gold-600: #d9a820;
+  --color-gold-700: #b88a15;
+  --color-gold-800: #946d10;
+  --color-gold-900: #6b4f0a;
+  --color-gold: #f4c430;
+  --color-gold-dark: #d9a820;
+
+  --color-ivory-50: #ffffff;
+  --color-ivory-100: #faf9f6;
+  --color-ivory-200: #f5f3ed;
+  --color-ivory-300: #f0ede3;
+  --color-ivory: #faf9f6;
+  --color-ivory-200: #f5f3ed;
+
+  --color-text: #1c1c1c;
+  --color-text-dark: #1c1c1c;
+  --color-text-muted: #6b6b6b;
+
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface: #ffffff;
+
+  --color-success-light: #dcfce7;
+  --color-success: #22c55e;
+  --color-success-dark: #15803d;
+
+  --color-warning-light: #fef3c7;
+  --color-warning: #f59e0b;
+  --color-warning-dark: #b45309;
+
+  --color-danger-light: #fee2e2;
+  --color-danger: #ef4444;
+  --color-danger-dark: #b91c1c;
+
+  --color-info-light: #dbeafe;
+  --color-info: #3b82f6;
+  --color-info-dark: #1d4ed8;
+
+  /* Admin Specific Colors */
+  --color-ruby-red: #5d242e;
+  --color-paper-white: #f3f0eb;
+  --color-card-white: #ffffff;
+  --color-gold-start: #d4af37;
+  --color-gold-end: #f4c430;
+  --color-text-dark: #2d2d2d;
+  --color-text-muted: #6b6b6b;
+  --color-maroon: #7b1f1f;
+  --color-maroon-dark: #5d242e;
+
+  --shadow-soft:
+    0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  --shadow-card:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-elevated: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 40px -10px rgba(155, 43, 43, 0.4);
+}
+
+/* Custom Utilities */
+@utility gradient-maroon {
+  background: linear-gradient(135deg, #8b1d1d 0%, #9b2b2b 100%);
+}
+
+@utility gradient-gold {
+  background: linear-gradient(135deg, #f4c430 0%, #d9a820 100%);
+}
+
+@utility gradient-light {
+  background: linear-gradient(135deg, #faf9f6 0%, #f5f3ed 50%, #ffffff 100%);
+}
+
+/* Component Classes */
+@layer components {
+  .admin-card {
+    @apply bg-white rounded-[32px] shadow-card border border-[#E2E8F0] transition-all duration-200;
+  }
+
+  .admin-card-hover {
+    @apply hover:shadow-elevated;
+  }
+
+  .admin-card-title {
+    @apply text-text font-semibold transition-colors duration-200;
+  }
+
+  .admin-card-subtitle {
+    @apply text-text/70 text-sm transition-colors duration-200;
+  }
+
+  .admin-card-icon {
+    @apply w-16 h-16 rounded-full bg-ivory-200 flex items-center justify-center text-primary transition-colors duration-200;
+  }
+}
+
+:root {
+  --background: #fbf6ee;
+  --foreground: #3b0a0d;
+
+  /* Retaining these for backward compat if used directly in style attributes */
+  --primary: #8b1d1d;
+  --secondary: #9b2b2b;
+  --accent: #c8a951;
+}
+
+/* ===============================
+   🖋 Custom Font
+================================= */
+@font-face {
+  font-family: "SpaceMono";
+  src: url("/fonts/SpaceMono-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* ===============================
+   🌍 BASE STYLES
+================================= */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: "SpaceMono", monospace;
+}
