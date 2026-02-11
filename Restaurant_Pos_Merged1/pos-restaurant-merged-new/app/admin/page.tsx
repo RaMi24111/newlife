@@ -157,7 +157,7 @@ export default function RestaurantLanding() {
             transition={{ delay: 0.6, duration: 0.6, type: "spring", stiffness: 200 }}
             className="flex justify-center"
           >
-            <Link href="/login/admin">
+            <Link href="/admin/login">
               <motion.button
                 className="relative bg-gradient-to-r from-gold via-[#C9A66B] to-gold text-white font-semibold text-base sm:text-lg md:text-xl py-4 sm:py-5 px-10 sm:px-14 md:px-16 rounded-sm shadow-2xl shadow-gold/50 overflow-hidden group uppercase tracking-wider"
                 style={{ fontFamily: "'Montserrat', sans-serif" }}

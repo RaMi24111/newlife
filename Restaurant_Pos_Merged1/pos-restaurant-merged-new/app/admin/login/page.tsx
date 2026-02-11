@@ -5,20 +5,21 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Input } from '@/app/admin/components/ui/Input';
 import { Button } from '@/app/admin/components/ui/Button';
+import { authService } from '@/app/admin/lib/auth.service';
 
 interface FormData {
-    phone: string;
-    otp: string;
+    email: string;
+    password: string;
 }
 
 export default function AdminLogin() {
     const router = useRouter();
     const [loginType, setLoginType] = useState<'admin' | 'staff'>('admin');
-    
+
     // Admin Form Data
     const [formData, setFormData] = useState<FormData>({
-        phone: '',
-        otp: ''
+        email: '',
+        password: ''
     });
 
     // Staff Form Data
@@ -35,17 +36,21 @@ export default function AdminLogin() {
         setError('');
 
         try {
-            // Simulate a brief loading delay for UX
-            await new Promise(resolve => setTimeout(resolve, 800));
-
             if (loginType === 'admin') {
-                 // Basic validation for Admin
-                if (!formData.phone || !formData.otp) {
+                // Basic validation for Admin
+                if (!formData.email || !formData.password) {
                     setError('Please fill in all fields');
                     setLoading(false);
                     return;
                 }
-                // Mock successful login - navigate to dashboard
+
+                // Call real backend API
+                await authService.login({
+                    email: formData.email,
+                    password: formData.password
+                });
+
+                // Navigate to dashboard on success
                 router.push('/admin/dashboard');
 
             } else {
@@ -55,16 +60,16 @@ export default function AdminLogin() {
                     setLoading(false);
                     return;
                 }
-                 // Save the role to localStorage to be picked up by AuthContext
-                 localStorage.setItem('extra_staff_role', staffRole);
-                 
+                // Save the role to localStorage to be picked up by AuthContext
+                localStorage.setItem('extra_staff_role', staffRole);
+
                 // Mock successful login - navigate to staff dashboard
                 router.push('/staff/staff-dashboard');
             }
 
-        } catch (err) {
-            setError('Something went wrong. Please try again.');
-            console.error(err);
+        } catch (err: any) {
+            setError(err.message || 'Login failed. Please check your credentials.');
+            console.error('Login error:', err);
         } finally {
             setLoading(false);
         }
@@ -83,24 +88,22 @@ export default function AdminLogin() {
             >
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-serif font-bold text-ruby-red mb-2">Portal Access</h1>
-                     <div className="flex justify-center gap-4 mt-4">
+                    <div className="flex justify-center gap-4 mt-4">
                         <button
                             onClick={() => { setLoginType('admin'); setError(''); }}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                                loginType === 'admin'
-                                    ? 'bg-ruby-red text-white shadow-md'
-                                    : 'bg-paper-white text-text-muted border border-gold-start/30 hover:bg-gold-start/10'
-                            }`}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${loginType === 'admin'
+                                ? 'bg-ruby-red text-white shadow-md'
+                                : 'bg-paper-white text-text-muted border border-gold-start/30 hover:bg-gold-start/10'
+                                }`}
                         >
                             Admin Login
                         </button>
                         <button
                             onClick={() => { setLoginType('staff'); setError(''); }}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                                loginType === 'staff'
-                                    ? 'bg-ruby-red text-white shadow-md'
-                                    : 'bg-paper-white text-text-muted border border-gold-start/30 hover:bg-gold-start/10'
-                            }`}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${loginType === 'staff'
+                                ? 'bg-ruby-red text-white shadow-md'
+                                : 'bg-paper-white text-text-muted border border-gold-start/30 hover:bg-gold-start/10'
+                                }`}
                         >
                             Staff Login
                         </button>
@@ -113,29 +116,30 @@ export default function AdminLogin() {
                     {loginType === 'admin' ? (
                         <>
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-text-dark">Phone Number / User ID</label>
+                                <label className="text-sm font-semibold text-text-dark">Email</label>
                                 <Input
-                                    placeholder="Enter your ID or Phone"
+                                    type="email"
+                                    placeholder="Enter your email"
                                     className="bg-paper-white border-gold-start/30 focus:border-ruby-red text-text-dark placeholder:text-text-muted/50"
-                                    value={formData.phone}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, phone: e.target.value })}
+                                    value={formData.email}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-text-dark">Password / OTP</label>
+                                <label className="text-sm font-semibold text-text-dark">Password</label>
                                 <Input
                                     type="password"
                                     placeholder="Enter password"
                                     className="bg-paper-white border-gold-start/30 focus:border-ruby-red text-text-dark placeholder:text-text-muted/50"
-                                    value={formData.otp}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, otp: e.target.value })}
+                                    value={formData.password}
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
                                 />
                             </div>
                         </>
                     ) : (
                         <>
-                             <div className="space-y-2">
+                            <div className="space-y-2">
                                 <label className="text-sm font-semibold text-text-dark">Role</label>
                                 <div className="grid grid-cols-2 gap-4">
                                     {[
@@ -145,11 +149,10 @@ export default function AdminLogin() {
                                         <div
                                             key={role.id}
                                             onClick={() => setStaffRole(role.id as 'server' | 'cashier')}
-                                            className={`cursor-pointer text-center py-2 rounded-lg border transition-all ${
-                                                staffRole === role.id
-                                                    ? 'bg-ruby-red/10 border-ruby-red text-ruby-red font-bold'
-                                                    : 'border-gold-start/30 text-text-muted hover:border-ruby-red/50'
-                                            }`}
+                                            className={`cursor-pointer text-center py-2 rounded-lg border transition-all ${staffRole === role.id
+                                                ? 'bg-ruby-red/10 border-ruby-red text-ruby-red font-bold'
+                                                : 'border-gold-start/30 text-text-muted hover:border-ruby-red/50'
+                                                }`}
                                         >
                                             {role.label}
                                         </div>

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
+import { AuthProvider } from "./contexts/AuthContext";
+import { RestaurantProvider } from "./contexts/RestaurantContext";
 
 const playfair = Playfair_Display({
   variable: "--font-serif",
@@ -29,7 +31,11 @@ export default function RootLayout({
       <div
         className={`${playfair.variable} ${inter.variable} font-sans antialiased min-h-screen`}
       >
-        {children}
+        <AuthProvider>
+          <RestaurantProvider>
+            {children}
+          </RestaurantProvider>
+        </AuthProvider>
       </div>
     </>
   );
