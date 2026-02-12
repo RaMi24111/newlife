@@ -1,235 +1,221 @@
 "use client";
-import { useState, useEffect, useCallback } from 'react';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
-import { motion } from 'framer-motion';
-import { Button } from '@/app/admin/components/ui/Button';
-import { DashboardHeader } from '@/app/admin/components/ui/DashboardHeader';
-import { Receipt, Clock } from 'lucide-react';
 
-const calendarStyles = `
-  .react-calendar {
-    background: #FFFFFF;
-    border: 1px solid #C8A951;
-    border-radius: 12px;
-    color: #3B0A0D;
-    font-family: inherit;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 4px 15px rgba(200, 169, 81, 0.2);
-  }
-  .react-calendar__navigation button {
-    color: #7B1F1F;
-    min-width: 44px;
-    background: none;
-    font-weight: bold;
-  }
-  .react-calendar__navigation button:enabled:hover,
-  .react-calendar__navigation button:enabled:focus {
-    background-color: rgba(200, 169, 81, 0.1);
-  }
-  .react-calendar__month-view__days__day {
-    color: #3B0A0D;
-  }
-  .react-calendar__tile:enabled:hover,
-  .react-calendar__tile:enabled:focus {
-    background-color: rgba(200, 169, 81, 0.1);
-    color: #7B1F1F;
-  }
-  .react-calendar__tile--now {
-    background: rgba(123, 31, 31, 0.1);
-    color: #7B1F1F;
-  }
-  .react-calendar__tile--active {
-    background: #7B1F1F !important;
-    color: #FFFFFF !important;
-  }
-`;
+import React, { useState, useMemo } from 'react';
+import { Search, Package, DollarSign, CheckCircle, Clock } from 'lucide-react';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import { OrdersProvider, useOrders } from '../../contexts/OrdersContext';
+import OrdersTable from '../../components/orders/OrdersTable';
+import OrderDetailsModal from '../../components/orders/OrderDetailsModal';
+import { Order, OrderStatus, PaymentStatus, OrderType } from '../../lib/orders.service';
 
-interface OrderItem {
-    name: string;
-    price: number;
-    count?: number;
-    quantity?: number;
-}
+function OrdersManagementContent() {
+    const { orders, isLoading, error } = useOrders();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL');
+    const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'ALL'>('ALL');
+    const [typeFilter, setTypeFilter] = useState<OrderType | 'ALL'>('ALL');
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-interface Order {
-    _id: string;
-    tableNo: number;
-    items: OrderItem[];
-    createdAt: string;
-    status: string;
-}
+    // Filter orders
+    const filteredOrders = useMemo(() => {
+        return orders.filter(order => {
+            const matchesSearch = !searchQuery ||
+                order.id.toLowerCase().includes(searchQuery.toLowerCase());
 
-type CalendarValue = Date | null;
+            const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter;
+            const matchesPayment = paymentFilter === 'ALL' || order.payment_status === paymentFilter;
+            const matchesType = typeFilter === 'ALL' || order.order_type === typeFilter;
 
-export default function OrderPage() {
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [mounted, setMounted] = useState(false);
+            return matchesSearch && matchesStatus && matchesPayment && matchesType;
+        });
+    }, [orders, searchQuery, statusFilter, paymentFilter, typeFilter]);
 
-    const fetchOrders = useCallback(async (date: Date) => {
-        setLoading(true);
-        // Mock data - no API call
-        try {
-            // Simulate brief delay
-            await new Promise(resolve => setTimeout(resolve, 600));
-
-            // Mock orders for the selected date
-            const mockOrders: Order[] = [
-                {
-                    _id: `ord_${date.getTime()}_1`,
-                    tableNo: 5,
-                    status: 'Paid',
-                    createdAt: date.toISOString(),
-                    items: [
-                        { name: 'Cold Coffee', price: 150, quantity: 2 },
-                        { name: 'Veg Burger', price: 180, quantity: 1 }
-                    ]
-                },
-                {
-                    _id: `ord_${date.getTime()}_2`,
-                    tableNo: 12,
-                    status: 'Paid',
-                    createdAt: date.toISOString(),
-                    items: [
-                        { name: 'Margerita Pizza', price: 450, quantity: 1 }
-                    ]
-                }
-            ];
-
-            setOrders(mockOrders);
-        } catch (err) {
-            console.error(err);
-            setOrders([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        setMounted(true);
-        fetchOrders(selectedDate);
-    }, [selectedDate, fetchOrders]);
-
-    const calculateTotal = (items: OrderItem[]) => {
-        return items.reduce((sum: number, item: OrderItem) => {
-            const qty = item.count || item.quantity || 0;
-            return sum + (item.price * qty);
-        }, 0);
+    const handleViewDetails = (order: Order) => {
+        setSelectedOrderId(order.id);
+        setShowDetailsModal(true);
     };
 
-    const dailyTotal = orders.reduce((sum: number, order: Order) => sum + calculateTotal(order.items), 0);
+    // Stats
+    const stats = {
+        total: orders.length,
+        completed: orders.filter(o => o.status === OrderStatus.COMPLETED).length,
+        pending: orders.filter(o => o.status === OrderStatus.PENDING).length,
+        revenue: orders
+            .filter(o => o.payment_status === PaymentStatus.PAID)
+            .reduce((sum, o) => sum + Number(o.total_amount), 0),
+    };
 
     return (
-        <div className="min-h-screen bg-background text-foreground p-8 font-sans">
-            <style>{calendarStyles}</style>
-            <div className="max-w-7xl mx-auto">
-                <DashboardHeader
-                    title="Order Bill"
-                    subtitle="View daily orders and billing history."
-                    showBackButton={true}
-                />
-
-                <div className="flex flex-col lg:flex-row gap-8">
-
-                    {/* Left Panel: Calendar & Summary */}
-                    <div className="lg:w-1/3 space-y-8">
-                        <div className="bg-card-white p-6 rounded-2xl shadow-xl border border-gold-start/20">
-                            <h2 className="text-2xl font-bold text-ruby-red mb-6 font-serif">Select Date</h2>
-                            <div className="calendar-wrapper bg-paper-white rounded-xl p-4 border border-gold-start/10 min-h-[300px]">
-                                {mounted ? (
-                                    <Calendar
-                                        value={selectedDate}
-                                        onChange={(value) => {
-                                            if (value instanceof Date) {
-                                                setSelectedDate(value);
-                                            }
-                                        }}
-                                        className="rounded-md"
-                                    />
-                                ) : (
-                                    <div className="h-full flex items-center justify-center text-text-muted">Loading calendar...</div>
-                                )}
+        <ProtectedRoute>
+            <div className="min-h-screen bg-paper-white">
+                {/* Header */}
+                <header className="bg-ruby-red py-8 px-8 shadow-lg border-b-4 border-gold-start">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-4xl font-serif font-bold text-white mb-2">
+                                    Orders Management
+                                </h1>
+                                <p className="text-gold-start/80">View and track all customer orders</p>
                             </div>
                         </div>
+                    </div>
+                </header>
 
-                        <div className="bg-linear-to-br from-ruby-red to-secondary p-6 rounded-2xl shadow-xl text-white relative overflow-hidden">
-                            <div className="absolute top-[-20%] right-[-20%] w-32 h-32 bg-gold-start/20 rounded-full blur-2xl"></div>
-                            <h2 className="text-xl font-bold mb-2 opacity-90">Daily Total Revenue</h2>
-                            <p className="text-4xl font-bold font-serif">₹{dailyTotal.toLocaleString()}</p>
-                            <div className="mt-4 text-sm opacity-70 flex items-center gap-2">
-                                <Receipt size={16} /> {orders.length} orders today
+                {/* Main Content */}
+                <div className="max-w-7xl mx-auto p-8">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <p className="text-red-800">{error}</p>
+                        </div>
+                    )}
+
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-blue-100 p-3 rounded-full">
+                                    <Package className="text-blue-600" size={24} />
+                                </div>
+                                <div>
+                                    <div className="text-text-muted text-sm mb-1">Total Orders</div>
+                                    <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-green-100 p-3 rounded-full">
+                                    <CheckCircle className="text-green-600" size={24} />
+                                </div>
+                                <div>
+                                    <div className="text-text-muted text-sm mb-1">Completed</div>
+                                    <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-yellow-100 p-3 rounded-full">
+                                    <Clock className="text-yellow-600" size={24} />
+                                </div>
+                                <div>
+                                    <div className="text-text-muted text-sm mb-1">Pending</div>
+                                    <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-ruby-red/10 p-3 rounded-full">
+                                    <DollarSign className="text-ruby-red" size={24} />
+                                </div>
+                                <div>
+                                    <div className="text-text-muted text-sm mb-1">Total Revenue</div>
+                                    <div className="text-2xl font-bold text-ruby-red">${stats.revenue.toFixed(2)}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Panel: Orders List */}
-                    <div className="lg:w-2/3">
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-3xl font-serif font-bold text-ruby-red">Order History</h1>
-                            <Button variant="outline" onClick={() => fetchOrders(selectedDate)} className="border-gold-start/30 text-ruby-red hover:bg-gold-start/10">
-                                Refresh List
-                            </Button>
+                    {/* Filters */}
+                    <div className="bg-white rounded-lg shadow-lg p-4 mb-6 border border-gray-100">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Search */}
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" size={20} />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search by Order ID..."
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                                />
+                            </div>
+
+                            {/* Status Filter */}
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as OrderStatus | 'ALL')}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                            >
+                                <option value="ALL">All Status</option>
+                                <option value={OrderStatus.PENDING}>Pending</option>
+                                <option value={OrderStatus.CONFIRMED}>Confirmed</option>
+                                <option value={OrderStatus.PREPARING}>Preparing</option>
+                                <option value={OrderStatus.READY}>Ready</option>
+                                <option value={OrderStatus.COMPLETED}>Completed</option>
+                                <option value={OrderStatus.CANCELLED}>Cancelled</option>
+                            </select>
+
+                            {/* Payment Filter */}
+                            <select
+                                value={paymentFilter}
+                                onChange={(e) => setPaymentFilter(e.target.value as PaymentStatus | 'ALL')}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                            >
+                                <option value="ALL">All Payments</option>
+                                <option value={PaymentStatus.PENDING}>Pending</option>
+                                <option value={PaymentStatus.PAID}>Paid</option>
+                                <option value={PaymentStatus.FAILED}>Failed</option>
+                            </select>
+
+                            {/* Type Filter */}
+                            <select
+                                value={typeFilter}
+                                onChange={(e) => setTypeFilter(e.target.value as OrderType | 'ALL')}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                            >
+                                <option value="ALL">All Types</option>
+                                <option value={OrderType.DINE_IN}>Dine-In</option>
+                                <option value={OrderType.TAKEAWAY}>Takeaway</option>
+                                <option value={OrderType.DELIVERY}>Delivery</option>
+                            </select>
                         </div>
-
-                        {loading ? (
-                            <div className="flex justify-center p-12">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ruby-red"></div>
-                            </div>
-                        ) : orders.length === 0 ? (
-                            <div className="bg-card-white p-12 rounded-2xl border-2 border-dashed border-text-muted/20 text-center">
-                                <p className="text-text-muted text-lg">No orders found for this date.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {orders.map((order) => {
-                                    const orderTotal = calculateTotal(order.items);
-                                    return (
-                                        <motion.div
-                                            key={order._id}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="bg-card-white p-6 rounded-xl shadow-md border border-gold-start/10 hover:shadow-lg hover:border-gold-start/30 transition-all group"
-                                        >
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <div className="flex items-center gap-3 mb-1">
-                                                        <span className="bg-gold-start/20 text-text-dark font-bold px-3 py-1 rounded-full text-sm border border-gold-start/30">
-                                                            Table {order.tableNo}
-                                                        </span>
-                                                        <span className="text-sm text-text-muted flex items-center gap-1">
-                                                            <Clock size={14} /> {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-xs text-text-muted uppercase tracking-wide">Order ID: {order._id.slice(-6)}</p>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="text-2xl font-bold text-ruby-red font-serif">₹{orderTotal}</p>
-                                                    <p className="text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full inline-block mt-1">PAID</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="border-t border-dashed border-gray-200 pt-4 mt-4">
-                                                <p className="text-sm font-bold text-text-dark mb-2">Items Ordered:</p>
-                                                <ul className="space-y-1">
-                                                    {order.items.map((item, idx) => (
-                                                        <li key={idx} className="flex justify-between text-sm">
-                                                            <span className="text-text-muted"><span className="font-bold text-text-dark">{item.count || item.quantity}x</span> {item.name}</span>
-                                                            <span className="font-medium text-text-dark">₹{item.price * (item.count || item.quantity || 0)}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
-                            </div>
-                        )}
                     </div>
+
+                    {/* Orders Count */}
+                    <div className="mb-4">
+                        <p className="text-text-muted">
+                            Showing <span className="font-semibold text-text-primary">{filteredOrders.length}</span> order{filteredOrders.length !== 1 ? 's' : ''}
+                        </p>
+                    </div>
+
+                    {/* Orders Table */}
+                    {isLoading ? (
+                        <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto"></div>
+                                <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                            </div>
+                        </div>
+                    ) : (
+                        <OrdersTable
+                            orders={filteredOrders}
+                            onViewDetails={handleViewDetails}
+                        />
+                    )}
                 </div>
             </div>
-        </div>
+
+            {/* Order Details Modal */}
+            <OrderDetailsModal
+                isOpen={showDetailsModal}
+                onClose={() => {
+                    setShowDetailsModal(false);
+                    setSelectedOrderId(null);
+                }}
+                orderId={selectedOrderId}
+            />
+        </ProtectedRoute>
+    );
+}
+
+export default function OrdersManagementPage() {
+    return (
+        <OrdersProvider>
+            <OrdersManagementContent />
+        </OrdersProvider>
     );
 }

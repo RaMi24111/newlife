@@ -1,239 +1,228 @@
 "use client";
-import React, { useState, useEffect, FormEvent, ChangeEvent, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit2, Trash2, Utensils } from 'lucide-react';
-import { Button } from '@/app/admin/components/ui/Button';
-import { Input } from '@/app/admin/components/ui/Input';
-import { DashboardHeader } from '@/app/admin/components/ui/DashboardHeader';
 
-interface MenuItem {
-    id: number;
-    name: string;
-    price: number | string;
-    description?: string;
-    image?: string;
-    category: string;
-    available?: boolean;
-}
+import React, { useState, useMemo } from 'react';
+import { Plus, Search, Grid, List } from 'lucide-react';
+import Link from 'next/link';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import { MenuProvider, useMenu } from '../../contexts/MenuContext';
+import CategoryManager from '../../components/menu/CategoryManager';
+import MenuItemCard from '../../components/menu/MenuItemCard';
+import AddItemModal from '../../components/menu/AddItemModal';
+import EditItemModal from '../../components/menu/EditItemModal';
+import DeleteConfirmation from '../../components/menu/DeleteConfirmation';
+import { MenuItem } from '../../lib/menu.service';
 
-interface FormData {
-    name: string;
-    price: string;
-    description: string;
-    image: string;
-    category: string;
-}
+function MenuManagementContent() {
+    const { categories, menuItems, isLoading, error } = useMenu();
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-export default function MenuPage() {
-    const [items, setItems] = useState<MenuItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [activeCategory, setActiveCategory] = useState("Beverages");
-    const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState<FormData>({ name: '', price: '', description: '', image: '', category: 'Beverages' });
-    const [editId, setEditId] = useState<number | null>(null);
-
-    const categories = ["Beverages", "Veg", "Non-Veg", "Today's Special"];
-
-    const fetchItems = React.useCallback(() => {
-        // Mock menu items - initialize state directly
-        const mockItems: MenuItem[] = [
-            { id: 1, name: 'Cappuccino', price: 120, description: 'Rich espresso with steamed milk', category: 'Beverages', available: true },
-            { id: 2, name: 'Paneer Tikka', price: 280, description: 'Grilled cottage cheese with spices', category: 'Veg', available: true },
-            { id: 3, name: 'Butter Chicken', price: 350, description: 'Tender chicken in creamy tomato sauce', category: 'Non-Veg', available: true },
-        ];
-        setItems(mockItems);
-        setLoading(false);
-    }, []);
-
-    useEffect(() => {
-        fetchItems();
-    }, [fetchItems]);
-
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        console.log('=== ADD ITEM DEBUG ===');
-        console.log('Form Data:', formData);
-        console.log('Current Items:', items);
-        console.log('Edit ID:', editId);
-
-        if (editId) {
-            // Update existing item
-            const updatedItems = items.map(item =>
-                item.id === editId
-                    ? { ...item, ...formData, price: parseFloat(formData.price) }
-                    : item
-            );
-            console.log('Updated Items:', updatedItems);
-            setItems(updatedItems);
-        } else {
-            // Add new item
-            const newItem: MenuItem = {
-                id: Date.now(),
-                ...formData,
-                price: parseFloat(formData.price),
-                available: true
-            };
-            console.log('New Item:', newItem);
-            const updatedItems = [...items, newItem];
-            console.log('Items after add:', updatedItems);
-            setItems(updatedItems);
-        }
-
-        setShowModal(false);
-        setEditId(null);
-        setFormData({ name: '', price: '', description: '', image: '', category: activeCategory });
-    };
+    // Filter menu items
+    const filteredItems = useMemo(() => {
+        return menuItems.filter(item => {
+            const matchesCategory = !selectedCategory || item.category_id === selectedCategory;
+            const matchesSearch = !searchQuery ||
+                item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesCategory && matchesSearch;
+        });
+    }, [menuItems, selectedCategory, searchQuery]);
 
     const handleEdit = (item: MenuItem) => {
-        setFormData({
-            name: item.name,
-            price: item.price.toString(),
-            description: item.description || '',
-            image: item.image || '',
-            category: item.category
-        });
-        setEditId(item.id);
-        setActiveCategory(item.category);
-        setShowModal(true);
+        setSelectedItem(item);
+        setShowEditModal(true);
     };
 
-    const handleDelete = (id: number) => {
-        if (!confirm("Are you sure?")) return;
-        setItems(items.filter(item => item.id !== id));
+    const handleDelete = (item: MenuItem) => {
+        setSelectedItem(item);
+        setShowDeleteModal(true);
     };
 
-    const filteredItems = items.filter(item => {
-        const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return normalize(item.category) === normalize(activeCategory);
-    });
+    const confirmDelete = async () => {
+        if (!selectedItem) return;
+
+        setIsDeleting(true);
+        try {
+            const { deleteMenuItem } = useMenu();
+            await deleteMenuItem(selectedItem.id);
+            setShowDeleteModal(false);
+            setSelectedItem(null);
+        } catch (error: any) {
+            alert(error.message || 'Failed to delete item');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const getCategoryName = (categoryId: string) => {
+        return categories.find(c => c.id === categoryId)?.name || 'Unknown';
+    };
 
     return (
-        <div className="min-h-screen bg-paper-white text-text-dark p-8 font-sans">
-            <div className="max-w-7xl mx-auto">
-                <DashboardHeader
-                    title="Menu Management"
-                    subtitle="Curate your dining offerings."
-                    showBackButton={true}
-                />
-
-                <div className="flex justify-end mb-4">
-                    <Button onClick={() => { setEditId(null); setFormData({ name: '', price: '', description: '', image: '', category: activeCategory }); setShowModal(true); }} className="bg-ruby-red text-white hover:bg-ruby-red/90 shadow-lg">
-                        <Plus size={20} className="mr-2" /> Add Item
-                    </Button>
-                </div>
-
-                {/* Categories Tabs */}
-                <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
-                    {categories.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => setActiveCategory(cat)}
-                            className={`px-6 py-2 rounded-full whitespace-nowrap transition-all font-semibold ${activeCategory === cat ? 'bg-ruby-red text-gold-end shadow-md' : 'bg-card-white text-text-muted hover:bg-white hover:text-ruby-red'}`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
-                </div>
-
-                {loading ? (
-                    <p>Loading menu...</p>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        <AnimatePresence mode="popLayout">
-                            {filteredItems.map((item) => (
-                                <motion.div
-                                    key={item.id}
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    className="bg-card-white rounded-xl shadow-md border border-gold-start/10 overflow-hidden group hover:shadow-xl hover:border-gold-start/30 transition-all"
-                                >
-                                    <div className="h-48 relative overflow-hidden bg-paper-white">
-                                        {item.image ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                        ) : (
-                                            <div className="flex items-center justify-center h-full text-text-muted/30">
-                                                <Utensils size={40} />
-                                            </div>
-                                        )}
-                                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-1 rounded-lg backdrop-blur-sm">
-                                            <button onClick={() => handleEdit(item)} className="p-1 text-white hover:text-gold-end"><Edit2 size={16} /></button>
-                                            <button onClick={() => handleDelete(item.id)} className="p-1 text-white hover:text-red-400"><Trash2 size={16} /></button>
-                                        </div>
-                                    </div>
-                                    <div className="p-4">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h3 className="font-bold text-lg text-ruby-red line-clamp-1">{item.name}</h3>
-                                            <span className="font-bold text-text-dark bg-gold-start/20 px-2 py-0.5 rounded text-sm">₹{item.price}</span>
-                                        </div>
-                                        <p className="text-text-muted text-sm line-clamp-2 h-10">{item.description}</p>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                        {filteredItems.length === 0 && (
-                            <div className="col-span-full text-center py-12 text-text-muted/40">
-                                No items in {activeCategory}. Add one to get started.
+        <ProtectedRoute>
+            <div className="min-h-screen bg-paper-white">
+                {/* Header */}
+                <header className="bg-ruby-red py-8 px-8 shadow-lg border-b-4 border-gold-start">
+                    <div className="max-w-7xl mx-auto">
+                        <Link href="/admin/dashboard" className="text-gold-start hover:text-white transition-colors mb-4 inline-block">
+                            ← Back to Dashboard
+                        </Link>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-4xl font-serif font-bold text-white mb-2">
+                                    Menu Management
+                                </h1>
+                                <p className="text-gold-start/80">Manage your restaurant menu items and categories</p>
                             </div>
-                        )}
+                            <button
+                                onClick={() => setShowAddModal(true)}
+                                className="flex items-center gap-2 px-6 py-3 bg-gold-start text-ruby-red rounded-lg hover:bg-gold-end transition-colors font-semibold shadow-lg"
+                            >
+                                <Plus size={20} />
+                                Add Menu Item
+                            </button>
+                        </div>
                     </div>
-                )}
+                </header>
+
+                {/* Main Content */}
+                <div className="max-w-7xl mx-auto p-8">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <p className="text-red-800">{error}</p>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        {/* Sidebar - Categories */}
+                        <div className="lg:col-span-1">
+                            <CategoryManager
+                                selectedCategory={selectedCategory}
+                                onSelectCategory={setSelectedCategory}
+                            />
+                        </div>
+
+                        {/* Main Content - Menu Items */}
+                        <div className="lg:col-span-3">
+                            {/* Search and View Controls */}
+                            <div className="bg-white rounded-lg shadow-lg p-4 mb-6 border border-gray-100">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1 relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" size={20} />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search menu items..."
+                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setViewMode('grid')}
+                                            className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-ruby-red text-white' : 'bg-gray-100 text-text-muted hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            <Grid size={20} />
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('list')}
+                                            className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-ruby-red text-white' : 'bg-gray-100 text-text-muted hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            <List size={20} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Items Count */}
+                            <div className="mb-4">
+                                <p className="text-text-muted">
+                                    Showing <span className="font-semibold text-text-primary">{filteredItems.length}</span> item{filteredItems.length !== 1 ? 's' : ''}
+                                    {selectedCategory && ` in ${getCategoryName(selectedCategory)}`}
+                                </p>
+                            </div>
+
+                            {/* Menu Items Grid/List */}
+                            {isLoading ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {[1, 2, 3, 4, 5, 6].map(i => (
+                                        <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
+                                            <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+                                            <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                                            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : filteredItems.length === 0 ? (
+                                <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
+                                    <div className="text-gray-300 mb-4">
+                                        <Plus size={64} className="mx-auto" />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-text-primary mb-2">
+                                        No menu items found
+                                    </h3>
+                                    <p className="text-text-muted mb-6">
+                                        {searchQuery ? 'Try adjusting your search' : 'Get started by adding your first menu item'}
+                                    </p>
+                                    {!searchQuery && (
+                                        <button
+                                            onClick={() => setShowAddModal(true)}
+                                            className="px-6 py-3 bg-ruby-red text-white rounded-lg hover:bg-ruby-red/90 transition-colors font-semibold"
+                                        >
+                                            Add Menu Item
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className={viewMode === 'grid'
+                                    ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'
+                                    : 'space-y-4'
+                                }>
+                                    {filteredItems.map(item => (
+                                        <MenuItemCard
+                                            key={item.id}
+                                            item={item}
+                                            categoryName={getCategoryName(item.category_id)}
+                                            onEdit={handleEdit}
+                                            onDelete={handleDelete}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Modal */}
-            <AnimatePresence>
-                {showModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 50 }}
-                            className="bg-card-white rounded-2xl p-8 max-w-lg w-full shadow-2xl border border-gold-start/30"
-                        >
-                            <h2 className="text-2xl font-bold text-ruby-red mb-6">{editId ? 'Edit Item' : 'Add New Item'}</h2>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <Input placeholder="Item Name" value={formData.name} onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })} required className="bg-paper-white border-gold-start/20" />
-                                <div className="flex gap-4">
-                                    <Input type="number" placeholder="Price (₹)" value={formData.price} onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, price: e.target.value })} required className="bg-paper-white border-gold-start/20" />
-                                    <select
-                                        value={formData.category}
-                                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, category: e.target.value })}
-                                        className="w-full rounded-md border border-gold-start/20 bg-paper-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ruby-red/20"
-                                    >
-                                        {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                                    </select>
-                                </div>
-                                <textarea
-                                    placeholder="Description"
-                                    value={formData.description}
-                                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full rounded-md border border-gold-start/20 bg-paper-white px-3 py-2 text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-ruby-red/20"
-                                />
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-text-muted uppercase">Image Source</label>
-                                    <Input
-                                        placeholder="Image URL (e.g. Google Drive Link or Direct URL)"
-                                        value={formData.image}
-                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, image: e.target.value })}
-                                        className="bg-paper-white border-gold-start/20"
-                                    />
-                                    <p className="text-xs text-text-muted">
-                                        Tip: Use <a href="https://drive.google.com/drive/folders/1Wk_CQeZw5dMv0ndYBah2Tp_aIj0Wi-xt?usp=sharing" target="_blank" rel="noreferrer" className="underline text-ruby-red">Google Drive</a> for hosting.
-                                    </p>
-                                </div>
+            {/* Modals */}
+            <AddItemModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+            <EditItemModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} item={selectedItem} />
+            <DeleteConfirmation
+                isOpen={showDeleteModal}
+                onClose={() => {
+                    setShowDeleteModal(false);
+                    setSelectedItem(null);
+                }}
+                onConfirm={confirmDelete}
+                item={selectedItem}
+                isDeleting={isDeleting}
+            />
+        </ProtectedRoute>
+    );
+}
 
-                                <div className="flex justify-end gap-3 mt-6">
-                                    <Button type="button" variant="ghost" onClick={() => setShowModal(false)} className="text-text-muted hover:bg-gray-100">Cancel</Button>
-                                    <Button type="submit" className="bg-ruby-red text-white hover:bg-ruby-red/90">{editId ? 'Update' : 'Create'}</Button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-        </div>
+export default function MenuManagementPage() {
+    return (
+        <MenuProvider>
+            <MenuManagementContent />
+        </MenuProvider>
     );
 }

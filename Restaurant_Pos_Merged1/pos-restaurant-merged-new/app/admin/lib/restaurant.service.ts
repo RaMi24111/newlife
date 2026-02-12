@@ -7,22 +7,23 @@ import { apiService } from './api.service';
 import { API_CONFIG } from './api.config';
 
 export interface RestaurantProfile {
+    // Core Identity
     id: string;
     name: string;
-    type: string;
-    status: 'ACTIVE' | 'INACTIVE';
-    address: {
-        street: string;
-        city: string;
-        state: string;
-        zipCode: string;
-        country: string;
-    };
-    contact: {
-        phone: string;
-        email: string;
-        website?: string;
-    };
+    restaurant_type: string; // Cafe / Restaurant / Cloud Kitchen
+    status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+
+    // Description & Contact
+    description?: string;
+    phone: string;
+    email: string;
+
+    // Address Info
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    pincode: string;
 }
 
 class RestaurantService {

@@ -28,24 +28,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check authentication status on mount and validate with backend
     useEffect(() => {
         const checkAuth = async () => {
-            const token = authService.getToken();
+            try {
+                const token = authService.getToken();
 
-            if (!token) {
-                setIsLoading(false);
-                return;
-            }
+                if (!token) {
+                    setIsLoading(false);
+                    return;
+                }
 
-            // Validate session with backend API
-            const userData = await authService.validateSession();
+                // Validate session with backend API (with timeout)
+                const userData = await authService.validateSession();
 
-            if (userData) {
-                setUser(userData);
-            } else {
-                // Session invalid, clear everything
+                if (userData) {
+                    setUser(userData);
+                } else {
+                    // Session invalid, clear everything
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error('Auth validation error:', error);
+                // On error, clear user but keep token (user can try to navigate)
                 setUser(null);
+            } finally {
+                setIsLoading(false);
             }
-
-            setIsLoading(false);
         };
 
         checkAuth();

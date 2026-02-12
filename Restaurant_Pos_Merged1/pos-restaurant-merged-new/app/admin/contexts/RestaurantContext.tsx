@@ -32,9 +32,14 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Fetch restaurant data on mount
+    // Fetch restaurant data on mount only if authenticated
     useEffect(() => {
-        fetchRestaurant();
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetchRestaurant();
+        } else {
+            setIsLoading(false);
+        }
     }, []);
 
     const value: RestaurantContextType = {

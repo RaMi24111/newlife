@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Utensils, LayoutGrid, Receipt, Users, User, LogOut } from 'lucide-react';
+import { Utensils, LayoutGrid, Receipt, Users, User, LogOut, Building2 } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
@@ -31,6 +31,12 @@ export default function Dashboard() {
     };
 
     const menuItems: MenuItem[] = [
+        {
+            title: 'Restaurant Profile',
+            icon: <Building2 size={48} />,
+            href: '/admin/dashboard/profile',
+            description: 'View restaurant details and contact information.'
+        },
         {
             title: 'Menu Management',
             icon: <Utensils size={48} />,
@@ -80,7 +86,7 @@ export default function Dashboard() {
                         </h1>
                         <div className="flex items-center justify-center gap-3 mb-2">
                             <p className="text-gold-start/80 text-lg tracking-wide uppercase font-semibold">
-                                Oversee your fine dining operations
+                                {restaurant?.restaurant_type || 'Oversee your fine dining operations'}
                             </p>
                             {restaurant && !restaurantLoading && (
                                 <StatusBadge status={restaurant.status} />
