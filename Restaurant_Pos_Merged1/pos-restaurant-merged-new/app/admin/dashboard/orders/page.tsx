@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Search, Package, DollarSign, CheckCircle, Clock } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { OrdersProvider, useOrders } from '../../contexts/OrdersContext';
 import OrdersTable from '../../components/orders/OrdersTable';
 import OrderDetailsModal from '../../components/orders/OrderDetailsModal';
-import { Order, OrderStatus, PaymentStatus, OrderType } from '../../lib/orders.service';
+import { Order, OrderType, OrderStatus, PaymentStatus } from '../../lib/orders.service';
 
 function OrdersManagementContent() {
     const { orders, isLoading, error } = useOrders();
@@ -39,8 +39,8 @@ function OrdersManagementContent() {
     // Stats
     const stats = {
         total: orders.length,
-        completed: orders.filter(o => o.status === OrderStatus.COMPLETED).length,
         pending: orders.filter(o => o.status === OrderStatus.PENDING).length,
+        completed: orders.filter(o => o.status === OrderStatus.COMPLETED).length,
         revenue: orders
             .filter(o => o.payment_status === PaymentStatus.PAID)
             .reduce((sum, o) => sum + Number(o.total_amount), 0),
@@ -74,53 +74,29 @@ function OrdersManagementContent() {
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-blue-100 p-3 rounded-full">
-                                    <Package className="text-blue-600" size={24} />
-                                </div>
-                                <div>
-                                    <div className="text-text-muted text-sm mb-1">Total Orders</div>
-                                    <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
-                                </div>
-                            </div>
+                            <div className="text-text-muted text-sm mb-1">Total Orders</div>
+                            <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
                         </div>
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-green-100 p-3 rounded-full">
-                                    <CheckCircle className="text-green-600" size={24} />
-                                </div>
-                                <div>
-                                    <div className="text-text-muted text-sm mb-1">Completed</div>
-                                    <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
-                                </div>
-                            </div>
+                            <div className="text-text-muted text-sm mb-1">Pending</div>
+                            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
                         </div>
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-yellow-100 p-3 rounded-full">
-                                    <Clock className="text-yellow-600" size={24} />
-                                </div>
-                                <div>
-                                    <div className="text-text-muted text-sm mb-1">Pending</div>
-                                    <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-                                </div>
-                            </div>
+                            <div className="text-text-muted text-sm mb-1">Completed</div>
+                            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
                         </div>
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-ruby-red/10 p-3 rounded-full">
-                                    <DollarSign className="text-ruby-red" size={24} />
-                                </div>
-                                <div>
-                                    <div className="text-text-muted text-sm mb-1">Total Revenue</div>
-                                    <div className="text-2xl font-bold text-ruby-red">${stats.revenue.toFixed(2)}</div>
-                                </div>
-                            </div>
+                            <div className="text-text-muted text-sm mb-1">Total Revenue</div>
+                            <div className="text-2xl font-bold text-ruby-red">${stats.revenue.toFixed(2)}</div>
                         </div>
                     </div>
 
                     {/* Filters */}
                     <div className="bg-white rounded-lg shadow-lg p-4 mb-6 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Filter size={20} className="text-text-muted" />
+                            <h3 className="font-semibold text-text-primary">Filters</h3>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             {/* Search */}
                             <div className="relative">

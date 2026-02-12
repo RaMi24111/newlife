@@ -45,20 +45,15 @@ export function MenuProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Fetch data on mount only if authenticated
+    // Fetch data on mount
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            const fetchData = async () => {
-                setIsLoading(true);
-                setError(null);
-                await Promise.all([fetchCategories(), fetchMenuItems()]);
-                setIsLoading(false);
-            };
-            fetchData();
-        } else {
+        const fetchData = async () => {
+            setIsLoading(true);
+            setError(null);
+            await Promise.all([fetchCategories(), fetchMenuItems()]);
             setIsLoading(false);
-        }
+        };
+        fetchData();
     }, []);
 
     const addCategory = async (data: { name: string; description?: string }) => {

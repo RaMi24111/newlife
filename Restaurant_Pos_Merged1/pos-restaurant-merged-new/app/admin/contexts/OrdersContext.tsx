@@ -29,19 +29,14 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Fetch data on mount only if authenticated
+    // Fetch data on mount
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            const fetchData = async () => {
-                setIsLoading(true);
-                await fetchOrders();
-                setIsLoading(false);
-            };
-            fetchData();
-        } else {
+        const fetchData = async () => {
+            setIsLoading(true);
+            await fetchOrders();
             setIsLoading(false);
-        }
+        };
+        fetchData();
     }, []);
 
     const getOrderDetails = async (id: string): Promise<OrderDetails> => {

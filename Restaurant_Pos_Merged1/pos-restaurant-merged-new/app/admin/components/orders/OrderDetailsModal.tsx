@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { X, Package, CreditCard, User, MapPin, FileText, Clock } from 'lucide-react';
+import { X, Package, Clock, CreditCard } from 'lucide-react';
 import { OrderDetails, OrderStatus, PaymentStatus, OrderType } from '../../lib/orders.service';
 import { useOrders } from '../../contexts/OrdersContext';
 
@@ -39,7 +39,7 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
     };
 
     const getStatusBadge = (status: OrderStatus) => {
-        const badges = {
+        const styles = {
             [OrderStatus.PENDING]: 'bg-yellow-100 text-yellow-800 border-yellow-300',
             [OrderStatus.CONFIRMED]: 'bg-blue-100 text-blue-800 border-blue-300',
             [OrderStatus.PREPARING]: 'bg-orange-100 text-orange-800 border-orange-300',
@@ -47,20 +47,16 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
             [OrderStatus.COMPLETED]: 'bg-green-100 text-green-800 border-green-300',
             [OrderStatus.CANCELLED]: 'bg-red-100 text-red-800 border-red-300',
         };
-        return badges[status] || 'bg-gray-100 text-gray-800 border-gray-300';
+        return styles[status] || styles[OrderStatus.PENDING];
     };
 
-    const getStatusLabel = (status: OrderStatus) => {
-        return status.charAt(0) + status.slice(1).toLowerCase().replace('_', ' ');
-    };
-
-    const getOrderTypeLabel = (type: OrderType) => {
-        const labels = {
-            [OrderType.DINE_IN]: 'Dine-In',
-            [OrderType.TAKEAWAY]: 'Takeaway',
-            [OrderType.DELIVERY]: 'Delivery',
+    const getPaymentStatusBadge = (status: PaymentStatus) => {
+        const styles = {
+            [PaymentStatus.PENDING]: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+            [PaymentStatus.PAID]: 'bg-green-100 text-green-800 border-green-300',
+            [PaymentStatus.FAILED]: 'bg-red-100 text-red-800 border-red-300',
         };
-        return labels[type] || type;
+        return styles[status] || styles[PaymentStatus.PENDING];
     };
 
     const formatDate = (dateString: string) => {
@@ -81,21 +77,9 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-ruby-red/10 p-3 rounded-full">
-                            <Package className="text-ruby-red" size={24} />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-serif font-bold text-text-primary">
-                                Order Details
-                            </h2>
-                            {orderDetails && (
-                                <p className="text-text-muted text-sm">
-                                    Order #{orderDetails.id.slice(0, 8).toUpperCase()}
-                                </p>
-                            )}
-                        </div>
-                    </div>
+                    <h2 className="text-2xl font-serif font-bold text-text-primary">
+                        Order Details
+                    </h2>
                     <button
                         onClick={onClose}
                         className="text-text-muted hover:text-text-primary transition-colors"
@@ -106,110 +90,70 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
 
                 {/* Content */}
                 <div className="p-6">
-                    {isLoading && (
+                    {isLoading ? (
                         <div className="text-center py-12">
                             <div className="animate-pulse space-y-4">
                                 <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto"></div>
                                 <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
                             </div>
                         </div>
-                    )}
-
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
-                            {error}
+                    ) : error ? (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                            <p className="text-red-800">{error}</p>
                         </div>
-                    )}
-
-                    {orderDetails && !isLoading && (
+                    ) : orderDetails ? (
                         <div className="space-y-6">
-                            {/* Order Info */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <div className="text-text-muted text-sm mb-1">Order Type</div>
-                                    <div className="font-semibold text-text-primary">
-                                        {getOrderTypeLabel(orderDetails.order_type)}
+                            {/* Order Header */}
+                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <div className="text-sm text-text-muted mb-1">Order ID</div>
+                                        <div className="font-mono font-semibold text-text-primary">
+                                            #{orderDetails.id.slice(0, 8)}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <div className="text-text-muted text-sm mb-1">Status</div>
-                                    <span
-                                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(
-                                            orderDetails.status
-                                        )}`}
-                                    >
-                                        {getStatusLabel(orderDetails.status)}
-                                    </span>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <div className="text-text-muted text-sm mb-1">Payment Status</div>
-                                    <div className="font-semibold text-text-primary capitalize">
-                                        {orderDetails.payment_status.toLowerCase()}
+                                    <div>
+                                        <div className="text-sm text-text-muted mb-1">Order Type</div>
+                                        <div className="font-semibold text-text-primary">
+                                            {orderDetails.order_type.replace('_', ' ')}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <div className="text-text-muted text-sm mb-1">Created</div>
-                                    <div className="text-sm text-text-primary">
-                                        {formatDate(orderDetails.created_at)}
+                                    <div>
+                                        <div className="text-sm text-text-muted mb-1">Status</div>
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(orderDetails.status)}`}>
+                                            {orderDetails.status}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-text-muted mb-1">Payment</div>
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getPaymentStatusBadge(orderDetails.payment_status)}`}>
+                                            {orderDetails.payment_status}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Customer Info */}
-                            {(orderDetails.customer_name || orderDetails.table_number) && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <h3 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
-                                        <User size={18} />
-                                        Customer Information
-                                    </h3>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {orderDetails.customer_name && (
-                                            <div>
-                                                <div className="text-text-muted text-sm">Name</div>
-                                                <div className="font-semibold">{orderDetails.customer_name}</div>
-                                            </div>
-                                        )}
-                                        {orderDetails.table_number && (
-                                            <div>
-                                                <div className="text-text-muted text-sm">Table Number</div>
-                                                <div className="font-semibold">{orderDetails.table_number}</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Order Items */}
                             <div>
-                                <h3 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
-                                    <Package size={18} />
+                                <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+                                    <Package size={20} />
                                     Order Items
                                 </h3>
-                                <div className="bg-gray-50 rounded-lg overflow-hidden">
+                                <div className="border border-gray-200 rounded-lg overflow-hidden">
                                     <table className="w-full">
-                                        <thead className="bg-gray-100 border-b border-gray-200">
+                                        <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-semibold text-text-primary uppercase">
-                                                    Item
-                                                </th>
-                                                <th className="px-4 py-3 text-center text-xs font-semibold text-text-primary uppercase">
-                                                    Qty
-                                                </th>
-                                                <th className="px-4 py-3 text-right text-xs font-semibold text-text-primary uppercase">
-                                                    Price
-                                                </th>
-                                                <th className="px-4 py-3 text-right text-xs font-semibold text-text-primary uppercase">
-                                                    Subtotal
-                                                </th>
+                                                <th className="px-4 py-3 text-left text-sm font-semibold text-text-primary">Item</th>
+                                                <th className="px-4 py-3 text-center text-sm font-semibold text-text-primary">Quantity</th>
+                                                <th className="px-4 py-3 text-right text-sm font-semibold text-text-primary">Price</th>
+                                                <th className="px-4 py-3 text-right text-sm font-semibold text-text-primary">Subtotal</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
                                             {orderDetails.items.map((item) => (
                                                 <tr key={item.id}>
                                                     <td className="px-4 py-3 text-text-primary">{item.name}</td>
-                                                    <td className="px-4 py-3 text-center text-text-primary">
-                                                        {item.quantity}
-                                                    </td>
+                                                    <td className="px-4 py-3 text-center text-text-primary">{item.quantity}</td>
                                                     <td className="px-4 py-3 text-right text-text-primary">
                                                         ${Number(item.price).toFixed(2)}
                                                     </td>
@@ -223,55 +167,63 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
                                 </div>
                             </div>
 
-                            {/* Pricing Breakdown */}
-                            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                                <div className="flex justify-between text-text-primary">
-                                    <span>Subtotal:</span>
-                                    <span className="font-semibold">${Number(orderDetails.subtotal).toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-text-primary">
-                                    <span>Tax:</span>
-                                    <span className="font-semibold">${Number(orderDetails.tax).toFixed(2)}</span>
-                                </div>
-                                <div className="border-t border-gray-300 pt-2 flex justify-between text-lg font-bold text-ruby-red">
-                                    <span>Total:</span>
-                                    <span>${Number(orderDetails.total_amount).toFixed(2)}</span>
+                            {/* Price Breakdown */}
+                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <h3 className="text-lg font-semibold text-text-primary mb-4">Price Breakdown</h3>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-text-primary">
+                                        <span>Subtotal</span>
+                                        <span className="font-semibold">${Number(orderDetails.subtotal).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-text-primary">
+                                        <span>Tax</span>
+                                        <span className="font-semibold">${Number(orderDetails.tax).toFixed(2)}</span>
+                                    </div>
+                                    <div className="border-t border-gray-300 pt-2 mt-2">
+                                        <div className="flex justify-between text-lg font-bold text-ruby-red">
+                                            <span>Total</span>
+                                            <span>${Number(orderDetails.total_amount).toFixed(2)}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Payment Method */}
-                            {orderDetails.payment_method && (
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <h3 className="font-semibold text-text-primary mb-2 flex items-center gap-2">
-                                        <CreditCard size={18} />
-                                        Payment Method
-                                    </h3>
-                                    <div className="text-text-primary capitalize">{orderDetails.payment_method}</div>
+                            {/* Payment & Timestamps */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                    <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                                        <CreditCard size={16} />
+                                        Payment Information
+                                    </h4>
+                                    <div className="space-y-1">
+                                        <div className="text-sm text-blue-800">
+                                            <span className="font-semibold">Method:</span> {orderDetails.payment_method || 'N/A'}
+                                        </div>
+                                        <div className="text-sm text-blue-800">
+                                            <span className="font-semibold">Status:</span> {orderDetails.payment_status}
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
 
-                            {/* Notes */}
-                            {orderDetails.notes && (
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                    <h3 className="font-semibold text-text-primary mb-2 flex items-center gap-2">
-                                        <FileText size={18} />
-                                        Notes
-                                    </h3>
-                                    <div className="text-text-primary">{orderDetails.notes}</div>
+                                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                                    <h4 className="text-sm font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                                        <Clock size={16} />
+                                        Timestamps
+                                    </h4>
+                                    <div className="space-y-1">
+                                        <div className="text-sm text-purple-800">
+                                            <span className="font-semibold">Created:</span> {formatDate(orderDetails.created_at)}
+                                        </div>
+                                        {orderDetails.updated_at && (
+                                            <div className="text-sm text-purple-800">
+                                                <span className="font-semibold">Updated:</span> {formatDate(orderDetails.updated_at)}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
-                    )}
-                </div>
-
-                {/* Footer */}
-                <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl">
-                    <button
-                        onClick={onClose}
-                        className="w-full px-6 py-3 bg-gray-200 text-text-primary rounded-lg hover:bg-gray-300 transition-colors font-semibold"
-                    >
-                        Close
-                    </button>
+                    ) : null}
                 </div>
             </div>
         </div>

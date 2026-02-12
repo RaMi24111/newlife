@@ -32,19 +32,14 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Fetch data on mount only if authenticated
+    // Fetch data on mount
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            const fetchData = async () => {
-                setIsLoading(true);
-                await fetchStaff();
-                setIsLoading(false);
-            };
-            fetchData();
-        } else {
+        const fetchData = async () => {
+            setIsLoading(true);
+            await fetchStaff();
             setIsLoading(false);
-        }
+        };
+        fetchData();
     }, []);
 
     const addStaff = async (data: CreateStaffRequest) => {

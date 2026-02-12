@@ -1,6 +1,6 @@
 /**
  * Orders Service
- * Handles order management (read-only)
+ * Handles read-only order viewing
  */
 
 import { apiService } from './api.service';
@@ -40,26 +40,23 @@ export interface OrderItem {
     subtotal: number;
 }
 
-// Order Interface (for list view)
+// Order Interface (List View)
 export interface Order {
     id: string;
     order_type: OrderType;
     status: OrderStatus;
-    payment_status: PaymentStatus;
     total_amount: number;
+    payment_status: PaymentStatus;
+    payment_method?: string;
     created_at: string;
     updated_at?: string;
 }
 
-// Order Details Interface (for detail view)
+// Order Details Interface (Detail View)
 export interface OrderDetails extends Order {
     items: OrderItem[];
     subtotal: number;
     tax: number;
-    payment_method?: string;
-    customer_name?: string;
-    table_number?: string;
-    notes?: string;
 }
 
 class OrdersService {
