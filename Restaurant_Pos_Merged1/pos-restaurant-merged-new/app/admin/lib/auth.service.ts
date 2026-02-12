@@ -58,12 +58,17 @@ class AuthService {
      * Logout user
      */
     logout(): void {
+        // Clear all auth data
         this.clearToken();
         this.clearUser();
 
-        // Redirect to login page
+        // Force a hard redirect to login page (clears all state)
         if (typeof window !== 'undefined') {
-            window.location.href = '/admin/login';
+            // Clear all localStorage to ensure clean state
+            localStorage.clear();
+
+            // Use window.location.replace for hard redirect (no back button)
+            window.location.replace('/admin/login');
         }
     }
 
