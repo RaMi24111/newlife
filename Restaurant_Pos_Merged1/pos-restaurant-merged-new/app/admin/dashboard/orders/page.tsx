@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { OrdersProvider, useOrders } from '../../contexts/OrdersContext';
 import OrdersTable from '../../components/orders/OrdersTable';
@@ -53,12 +54,20 @@ function OrdersManagementContent() {
                 <header className="bg-ruby-red py-8 px-8 shadow-lg border-b-4 border-gold-start">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex items-center justify-between">
-                            <div>
+                            <Link
+                                href="/admin/dashboard"
+                                className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors font-semibold border border-white/30"
+                            >
+                                <ArrowLeft size={20} />
+                                Back to Dashboard
+                            </Link>
+                            <div className="text-center">
                                 <h1 className="text-4xl font-serif font-bold text-white mb-2">
                                     Orders Management
                                 </h1>
                                 <p className="text-gold-start/80">View and track all customer orders</p>
                             </div>
+                            <div className="w-48"></div> {/* Spacer for alignment */}
                         </div>
                     </div>
                 </header>

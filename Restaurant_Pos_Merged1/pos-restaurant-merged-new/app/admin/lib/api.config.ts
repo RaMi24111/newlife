@@ -30,6 +30,12 @@ export const API_CONFIG = {
             LIST: '/api/admin/orders',
             DETAILS: (id: string) => `/api/admin/orders/${id}`,
         },
+        TABLES: {
+            LIST: '/api/admin/tables',
+            CREATE: '/api/admin/tables',
+            TOGGLE: (id: string) => `/api/admin/tables/${id}/toggle`,
+            DELETE: (id: string) => `/api/admin/tables/${id}`,
+        },
     },
     HEADERS: {
         'Content-Type': 'application/json',

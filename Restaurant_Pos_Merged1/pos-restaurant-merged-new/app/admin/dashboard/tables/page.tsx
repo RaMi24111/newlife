@@ -1,238 +1,225 @@
 "use client";
-import React, { useState, useEffect, FormEvent, ChangeEvent, MouseEvent, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/app/admin/components/ui/Button';
-import { Input } from '@/app/admin/components/ui/Input';
-import { DashboardHeader } from '@/app/admin/components/ui/DashboardHeader';
-import { Trash2, Settings, X, CheckCircle } from 'lucide-react';
 
-interface Table {
-    id: number;
-    tableNo: number;
-    status: string;
-    capacity: number;
-    qrCode: string;
-}
+import React, { useState, useMemo } from 'react';
+import { Search, Plus, Filter, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import { TablesProvider, useTables } from '../../contexts/TablesContext';
+import TablesTable from '../../components/tables/TablesTable';
+import AddTableModal from '../../components/tables/AddTableModal';
+import DeleteTableConfirmation from '../../components/tables/DeleteTableConfirmation';
+import ViewQRModal from '../../components/tables/ViewQRModal';
+import { Table, TableStatus } from '../../lib/tables.service';
 
-export default function TablesPage() {
-    const [tables, setTables] = useState<Table[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [setupCount, setSetupCount] = useState('');
-    const [showPrompt, setShowPrompt] = useState(false);
+function TablesManagementContent() {
+    const { tables, isLoading, error, deleteTable } = useTables();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<TableStatus | 'ALL'>('ALL');
+    const [activeFilter, setActiveFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [selectedTable, setSelectedTable] = useState<Table | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-    const fetchTables = React.useCallback(async () => {
-        // Mock data - no API call
+    // Filter tables
+    const filteredTables = useMemo(() => {
+        return tables.filter(table => {
+            const matchesSearch = !searchQuery ||
+                table.table_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                table.qr_token.toLowerCase().includes(searchQuery.toLowerCase());
+
+            const matchesStatus = statusFilter === 'ALL' || table.table_status === statusFilter;
+
+            const matchesActive = activeFilter === 'ALL' ||
+                (activeFilter === 'ACTIVE' && table.is_active) ||
+                (activeFilter === 'INACTIVE' && !table.is_active);
+
+            return matchesSearch && matchesStatus && matchesActive;
+        });
+    }, [tables, searchQuery, statusFilter, activeFilter]);
+
+    const handleDelete = (table: Table) => {
+        setSelectedTable(table);
+        setShowDeleteModal(true);
+    };
+
+    const handleViewQR = (table: Table) => {
+        setSelectedTable(table);
+        setShowQRModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!selectedTable) return;
+
+        setIsDeleting(true);
         try {
-            // Simulate loading delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Mock tables
-            const mockTables: Table[] = [
-                { id: 1, tableNo: 1, status: 'Empty', capacity: 4, qrCode: '/next.svg' },
-                { id: 2, tableNo: 2, status: 'Occupied', capacity: 2, qrCode: '/next.svg' },
-                { id: 3, tableNo: 3, status: 'Empty', capacity: 6, qrCode: '/next.svg' },
-            ];
-            setTables(mockTables);
-        } catch (err) {
-            console.error(err);
+            await deleteTable(selectedTable.id);
+            setShowDeleteModal(false);
+            setSelectedTable(null);
+        } catch (error: any) {
+            alert(error.message || 'Failed to delete table');
         } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchTables();
-
-        const hasPrompted = sessionStorage.getItem('tables_prompted');
-        if (!hasPrompted) {
-            setShowPrompt(true);
-        }
-    }, [fetchTables]);
-
-    const handleSetup = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (!setupCount || parseInt(setupCount) < 1) return;
-
-        // Mock setup - no API call
-        try {
-            setLoading(true);
-            // Simulate loading delay
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            const count = parseInt(setupCount);
-            const newTables: Table[] = Array.from({ length: count }, (_, i) => ({
-                id: i + 1,
-                tableNo: i + 1,
-                status: 'Empty',
-                capacity: 4,
-                qrCode: '/next.svg'
-            }));
-
-            setTables(newTables);
-            setShowPrompt(false);
-            sessionStorage.setItem('tables_prompted', 'true');
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
+            setIsDeleting(false);
         }
     };
 
-    const closePrompt = () => {
-        setShowPrompt(false);
-        sessionStorage.setItem('tables_prompted', 'true');
-    };
-
-    const toggleStatus = async (table: Table) => {
-        const newStatus = table.status === 'Occupied' ? 'Empty' : 'Occupied';
-
-        // Mock toggle - no API call
-        try {
-            // Simulate brief delay
-            await new Promise(resolve => setTimeout(resolve, 200));
-
-            setTables(tables.map(t =>
-                t.id === table.id
-                    ? { ...t, status: newStatus }
-                    : t
-            ));
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const addTable = async () => {
-        const nextNo = tables.length > 0 ? tables[tables.length - 1].tableNo + 1 : 1;
-
-        // Mock add - no API call
-        try {
-            // Simulate brief delay
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            const newTable: Table = {
-                id: Date.now(),
-                tableNo: nextNo,
-                status: 'Empty',
-                capacity: 4,
-                qrCode: '/next.svg'
-            };
-
-            setTables([...tables, newTable]);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const removeTable = async (id: number) => {
-        if (!confirm('Remove this table?')) return;
-
-        // Mock remove - no API call
-        try {
-            // Simulate brief delay
-            await new Promise(resolve => setTimeout(resolve, 200));
-            setTables(tables.filter(t => t.id !== id));
-        } catch (err) {
-            console.error(err);
-        }
+    // Stats
+    const stats = {
+        total: tables.length,
+        active: tables.filter(t => t.is_active).length,
+        empty: tables.filter(t => t.table_status === TableStatus.EMPTY).length,
+        occupied: tables.filter(t => t.table_status === TableStatus.OCCUPIED).length,
     };
 
     return (
-        <div className="min-h-screen bg-paper-white text-text-dark p-8 font-sans">
-            <div className="max-w-7xl mx-auto">
-                <DashboardHeader
-                    title="Table Details"
-                    showBackButton={true}
-                />
-
-                <div className="flex justify-end mb-4">
-                    <Button onClick={() => setShowPrompt(true)} variant="outline" className="flex items-center gap-2 border-gold-start text-ruby-red hover:bg-gold-start/10">
-                        <Settings size={18} /> Configure Count
-                    </Button>
-                </div>
-
-                {loading ? (
-                    <p>Loading tables...</p>
-                ) : (
-                    <div>
-                        <div className="flex justify-between items-center mb-6">
-                            <p className="text-text-muted">Manage table status and QR codes.</p>
-                            <Button onClick={addTable} variant="outline" className="flex items-center gap-2 border-gold-start/50 text-ruby-red hover:bg-gold-start/10"><CheckCircle size={16} /> Add Table</Button>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                            {tables.map((table) => (
-                                <motion.div
-                                    key={table.id}
-                                    layout
-                                    className={`relative p-6 rounded-xl border flex flex-col items-center justify-center gap-4 transition-all shadow-sm ${table.status === 'Occupied' ? 'bg-ruby-red border-ruby-red text-white' : 'bg-card-white border-gold-start/30 text-text-dark hover:border-gold-start hover:shadow-lg'}`}
-                                >
-                                    <div className="absolute top-2 right-2 z-10">
-                                        <button onClick={(e: MouseEvent<HTMLButtonElement>) => { e.stopPropagation(); removeTable(table.id); }} className={`p-1 rounded transition-colors ${table.status === 'Occupied' ? 'text-white/70 hover:text-white hover:bg-white/20' : 'text-text-muted hover:text-red-500 hover:bg-red-50'}`}><Trash2 size={16} /></button>
-                                    </div>
-
-                                    <div className={`text-3xl font-bold font-serif ${table.status === 'Occupied' ? 'text-gold-end' : 'text-ruby-red'}`}>
-                                        {table.tableNo}
-                                    </div>
-
-                                    <div
-                                        onClick={(e: MouseEvent<HTMLDivElement>) => { e.stopPropagation(); toggleStatus(table); }}
-                                        className={`flex items-center gap-2 cursor-pointer px-3 py-1 rounded-full transition-colors ${table.status === 'Occupied' ? 'bg-black/20 text-white' : 'bg-paper-white text-text-muted hover:bg-paper-white/80'}`}
-                                    >
-                                        <div className={`w-2 h-2 rounded-full ${table.status === 'Occupied' ? 'bg-gold-end' : 'bg-text-muted'}`}></div>
-                                        <span className="text-xs uppercase tracking-widest font-bold">{table.status}</span>
-                                    </div>
-
-                                    <div className="mt-2 bg-white p-2 rounded shadow-inner">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={table.qrCode} alt={`QR Table ${table.tableNo}`} className="w-16 h-16" />
-                                    </div>
-                                    <a href={table.qrCode} download={`table-${table.tableNo}-qr.png`} className={`text-xs underline opacity-60 hover:opacity-100 ${table.status === 'Occupied' ? 'text-white' : 'text-ruby-red'}`}>Download QR</a>
-                                </motion.div>
-                            ))}
+        <ProtectedRoute>
+            <div className="min-h-screen bg-paper-white">
+                {/* Header */}
+                <header className="bg-ruby-red py-8 px-8 shadow-lg border-b-4 border-gold-start">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex items-center justify-between">
+                            <Link
+                                href="/admin/dashboard"
+                                className="flex items-center gap-2 px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors font-semibold border border-white/30"
+                            >
+                                <ArrowLeft size={20} />
+                                Back to Dashboard
+                            </Link>
+                            <div className="text-center">
+                                <h1 className="text-4xl font-serif font-bold text-white mb-2">
+                                    Tables Management
+                                </h1>
+                                <p className="text-gold-start/80">Manage restaurant tables and QR codes</p>
+                            </div>
+                            <button
+                                onClick={() => setShowAddModal(true)}
+                                className="flex items-center gap-2 px-6 py-3 bg-gold-start text-ruby-red rounded-lg hover:bg-gold-end transition-colors font-semibold shadow-lg"
+                            >
+                                <Plus size={20} />
+                                Add Table
+                            </button>
                         </div>
                     </div>
-                )}
+                </header>
+
+                {/* Main Content */}
+                <div className="max-w-7xl mx-auto p-8">
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <p className="text-red-800">{error}</p>
+                        </div>
+                    )}
+
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+                            <div className="text-text-muted text-sm mb-1">Total Tables</div>
+                            <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+                            <div className="text-text-muted text-sm mb-1">Active</div>
+                            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+                            <div className="text-text-muted text-sm mb-1">Empty</div>
+                            <div className="text-2xl font-bold text-green-600">{stats.empty}</div>
+                        </div>
+                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
+                            <div className="text-text-muted text-sm mb-1">Occupied</div>
+                            <div className="text-2xl font-bold text-red-600">{stats.occupied}</div>
+                        </div>
+                    </div>
+
+                    {/* Filters */}
+                    <div className="bg-white rounded-lg shadow-lg p-4 mb-6 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Filter size={20} className="text-text-muted" />
+                            <h3 className="font-semibold text-text-primary">Filters</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Search */}
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" size={20} />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search by table number..."
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                                />
+                            </div>
+
+                            {/* Status Filter */}
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as TableStatus | 'ALL')}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                            >
+                                <option value="ALL">All Status</option>
+                                <option value={TableStatus.EMPTY}>Empty</option>
+                                <option value={TableStatus.OCCUPIED}>Occupied</option>
+                            </select>
+
+                            {/* Active Filter */}
+                            <select
+                                value={activeFilter}
+                                onChange={(e) => setActiveFilter(e.target.value as 'ALL' | 'ACTIVE' | 'INACTIVE')}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                            >
+                                <option value="ALL">All Tables</option>
+                                <option value="ACTIVE">Active Only</option>
+                                <option value="INACTIVE">Inactive Only</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Tables Count */}
+                    <div className="mb-4">
+                        <p className="text-text-muted">
+                            Showing <span className="font-semibold text-text-primary">{filteredTables.length}</span> table{filteredTables.length !== 1 ? 's' : ''}
+                        </p>
+                    </div>
+
+                    {/* Tables Table */}
+                    {isLoading ? (
+                        <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
+                            <div className="animate-pulse space-y-4">
+                                <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto"></div>
+                                <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                            </div>
+                        </div>
+                    ) : (
+                        <TablesTable
+                            tables={filteredTables}
+                            onDelete={handleDelete}
+                            onViewQR={handleViewQR}
+                        />
+                    )}
+                </div>
             </div>
 
-            <AnimatePresence>
-                {showPrompt && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-card-white border border-gold-start rounded-2xl p-8 max-w-md w-full relative shadow-2xl"
-                        >
-                            <button onClick={closePrompt} className="absolute top-4 right-4 text-text-muted hover:text-ruby-red">
-                                <X size={24} />
-                            </button>
-                            <h2 className="text-3xl font-bold text-ruby-red mb-4 font-serif text-center">Setup Tables</h2>
-                            <p className="text-center text-text-muted mb-8">How many tables are in your restaurant?</p>
+            {/* Modals */}
+            <AddTableModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
+            <ViewQRModal isOpen={showQRModal} onClose={() => setShowQRModal(false)} table={selectedTable} />
+            <DeleteTableConfirmation
+                isOpen={showDeleteModal}
+                onClose={() => {
+                    setShowDeleteModal(false);
+                    setSelectedTable(null);
+                }}
+                onConfirm={confirmDelete}
+                table={selectedTable}
+                isDeleting={isDeleting}
+            />
+        </ProtectedRoute>
+    );
+}
 
-                            <form onSubmit={handleSetup} className="space-y-6">
-                                <Input
-                                    placeholder="Number of tables (e.g. 15)"
-                                    type="number"
-                                    value={setupCount}
-                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setSetupCount(e.target.value)}
-                                    required
-                                    min="1"
-                                    className="text-center text-lg bg-paper-white border-gold-start/30 focus:border-ruby-red"
-                                />
-                                <div className="flex gap-4">
-                                    <Button type="submit" className="flex-1 bg-ruby-red text-white font-bold hover:bg-ruby-red/90 shadow-lg">Initialize</Button>
-                                    <Button type="button" variant="outline" onClick={closePrompt} className="flex-1 border-gray-200 text-text-muted hover:bg-gray-50">Skip</Button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
+export default function TablesManagementPage() {
+    return (
+        <TablesProvider>
+            <TablesManagementContent />
+        </TablesProvider>
     );
 }
