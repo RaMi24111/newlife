@@ -32,12 +32,6 @@ export default function Dashboard() {
 
     const menuItems: MenuItem[] = [
         {
-            title: 'Restaurant Profile',
-            icon: <Building2 size={48} />,
-            href: '/admin/dashboard/profile',
-            description: 'View restaurant details and contact information.'
-        },
-        {
             title: 'Menu Management',
             icon: <Utensils size={48} />,
             href: '/admin/dashboard/menu',
@@ -123,9 +117,17 @@ export default function Dashboard() {
                                             <p className="font-semibold text-text-dark">{user?.name || 'Admin'}</p>
                                             <p className="text-xs text-text-muted">{user?.email || 'admin@restaurant.com'}</p>
                                         </div>
+                                        <Link
+                                            href="/admin/dashboard/profile"
+                                            className="w-full px-4 py-3 text-left hover:bg-ruby-red/5 transition-colors flex items-center gap-2 text-text-dark font-semibold"
+                                            onClick={() => setShowProfileMenu(false)}
+                                        >
+                                            <Building2 size={16} />
+                                            Restaurant Profile
+                                        </Link>
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full px-4 py-3 text-left hover:bg-ruby-red/5 transition-colors flex items-center gap-2 text-ruby-red font-semibold"
+                                            className="w-full px-4 py-3 text-left hover:bg-ruby-red/5 transition-colors flex items-center gap-2 text-ruby-red font-semibold border-t border-gold-start/10"
                                         >
                                             <LogOut size={16} />
                                             Logout
