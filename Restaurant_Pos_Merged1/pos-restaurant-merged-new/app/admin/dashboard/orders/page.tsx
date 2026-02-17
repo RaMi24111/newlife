@@ -96,7 +96,7 @@ function OrdersManagementContent() {
                         </div>
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
                             <div className="text-text-muted text-sm mb-1">Total Revenue</div>
-                            <div className="text-2xl font-bold text-ruby-red">${stats.revenue.toFixed(2)}</div>
+                            <div className="text-2xl font-bold text-ruby-red">₹{stats.revenue.toFixed(2)}</div>
                         </div>
                     </div>
 

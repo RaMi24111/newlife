@@ -59,7 +59,7 @@ export default function DeleteConfirmation({
                                 )}
                             </div>
                             <div className="text-right">
-                                <div className="font-bold text-ruby-red">${Number(item.price).toFixed(2)}</div>
+                                <div className="font-bold text-ruby-red">₹{Number(item.price).toFixed(2)}</div>
                             </div>
                         </div>
                     </div>

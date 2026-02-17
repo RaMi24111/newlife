@@ -92,6 +92,21 @@ class MenuService {
     }
 
     /**
+     * Delete category
+     */
+    async deleteCategory(id: string): Promise<void> {
+        try {
+            await apiService.delete(
+                API_CONFIG.ENDPOINTS.MENU.CATEGORY_BY_ID(id),
+                true
+            );
+        } catch (error) {
+            console.error('Failed to delete category:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Get all menu items
      */
     async getMenuItems(): Promise<MenuItem[]> {

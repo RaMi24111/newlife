@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Plus, FolderOpen } from 'lucide-react';
+import { Plus, FolderOpen, Trash2 } from 'lucide-react';
 import { useMenu } from '../../contexts/MenuContext';
 
 interface CategoryManagerProps {
@@ -10,10 +10,11 @@ interface CategoryManagerProps {
 }
 
 export default function CategoryManager({ selectedCategory, onSelectCategory }: CategoryManagerProps) {
-    const { categories, addCategory, isLoading } = useMenu();
+    const { categories, addCategory, deleteCategory, isLoading } = useMenu();
     const [showAddForm, setShowAddForm] = useState(false);
     const [newCategory, setNewCategory] = useState({ name: '', description: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,6 +32,25 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
             alert(error.message || 'Failed to create category');
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (categoryId: string, categoryName: string) => {
+        if (!confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        setDeletingId(categoryId);
+        try {
+            await deleteCategory(categoryId);
+            // If the deleted category was selected, reset to "All Items"
+            if (selectedCategory === categoryId) {
+                onSelectCategory(null);
+            }
+        } catch (error: any) {
+            alert(error.message || 'Failed to delete category');
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -134,25 +154,43 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
                 </button>
 
                 {categories.map((category) => (
-                    <button
+                    <div
                         key={category.id}
-                        onClick={() => onSelectCategory(category.id)}
-                        className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${selectedCategory === category.id
-                            ? 'bg-ruby-red text-white'
-                            : 'bg-gray-50 text-text-primary hover:bg-gray-100'
+                        className={`flex items-center gap-2 rounded-lg transition-colors ${selectedCategory === category.id
+                                ? 'bg-ruby-red text-white'
+                                : 'bg-gray-50 text-text-primary hover:bg-gray-100'
                             }`}
                     >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="font-semibold">{category.name}</div>
-                                {category.description && (
-                                    <div className={`text-sm ${selectedCategory === category.id ? 'text-white/80' : 'text-text-muted'}`}>
-                                        {category.description}
-                                    </div>
-                                )}
+                        <button
+                            onClick={() => onSelectCategory(category.id)}
+                            className="flex-1 text-left px-4 py-3"
+                        >
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="font-semibold">{category.name}</div>
+                                    {category.description && (
+                                        <div className={`text-sm ${selectedCategory === category.id ? 'text-white/80' : 'text-text-muted'}`}>
+                                            {category.description}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    </button>
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(category.id, category.name);
+                            }}
+                            disabled={deletingId === category.id}
+                            className={`px-3 py-3 mr-2 rounded-lg transition-colors ${selectedCategory === category.id
+                                    ? 'hover:bg-white/20 text-white'
+                                    : 'hover:bg-red-100 text-red-600'
+                                } disabled:opacity-50`}
+                            title="Delete category"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
                 ))}
 
                 {categories.length === 0 && !showAddForm && (

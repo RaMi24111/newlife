@@ -155,10 +155,10 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
                                                     <td className="px-4 py-3 text-text-primary">{item.name}</td>
                                                     <td className="px-4 py-3 text-center text-text-primary">{item.quantity}</td>
                                                     <td className="px-4 py-3 text-right text-text-primary">
-                                                        ${Number(item.price).toFixed(2)}
+                                                        ₹{Number(item.price).toFixed(2)}
                                                     </td>
                                                     <td className="px-4 py-3 text-right font-semibold text-text-primary">
-                                                        ${Number(item.subtotal).toFixed(2)}
+                                                        ₹{Number(item.subtotal).toFixed(2)}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -173,16 +173,16 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-text-primary">
                                         <span>Subtotal</span>
-                                        <span className="font-semibold">${Number(orderDetails.subtotal).toFixed(2)}</span>
+                                        <span className="font-semibold">₹{Number(orderDetails.subtotal).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-text-primary">
                                         <span>Tax</span>
-                                        <span className="font-semibold">${Number(orderDetails.tax).toFixed(2)}</span>
+                                        <span className="font-semibold">₹{Number(orderDetails.tax).toFixed(2)}</span>
                                     </div>
                                     <div className="border-t border-gray-300 pt-2 mt-2">
                                         <div className="flex justify-between text-lg font-bold text-ruby-red">
                                             <span>Total</span>
-                                            <span>${Number(orderDetails.total_amount).toFixed(2)}</span>
+                                            <span>₹{Number(orderDetails.total_amount).toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>

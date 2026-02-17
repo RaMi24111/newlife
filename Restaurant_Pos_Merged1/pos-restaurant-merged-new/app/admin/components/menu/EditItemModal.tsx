@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Image as ImageIcon } from 'lucide-react';
 import { useMenu } from '../../contexts/MenuContext';
 import { MenuItem, UpdateMenuItemRequest } from '../../lib/menu.service';
 
@@ -11,9 +11,52 @@ interface EditItemModalProps {
     item: MenuItem | null;
 }
 
+// Utility function to convert Google Drive links to direct image URLs
+const convertGoogleDriveLink = (url: string): string => {
+    if (!url) return url;
+
+    // Pattern 1: https://drive.google.com/file/d/FILE_ID/view
+    const pattern1 = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+
+    // Pattern 2: https://drive.google.com/open?id=FILE_ID
+    const pattern2 = /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/;
+
+    // Pattern 3: Already converted format
+    const pattern3 = /drive\.google\.com\/uc\?/;
+
+    let fileId = null;
+
+    // Check if already in correct format
+    if (pattern3.test(url)) {
+        return url;
+    }
+
+    // Try pattern 1
+    let match = url.match(pattern1);
+    if (match && match[1]) {
+        fileId = match[1];
+    }
+
+    // Try pattern 2 if pattern 1 didn't match
+    if (!fileId) {
+        match = url.match(pattern2);
+        if (match && match[1]) {
+            fileId = match[1];
+        }
+    }
+
+    // If we found a file ID, convert to direct link
+    if (fileId) {
+        return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    }
+
+    return url;
+};
+
 export default function EditItemModal({ isOpen, onClose, item }: EditItemModalProps) {
     const { categories, updateMenuItem } = useMenu();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [imagePreview, setImagePreview] = useState('');
     const [formData, setFormData] = useState<UpdateMenuItemRequest>({});
 
     useEffect(() => {
@@ -27,8 +70,15 @@ export default function EditItemModal({ isOpen, onClose, item }: EditItemModalPr
                 image_url: item.image_url || '',
                 preparation_time: item.preparation_time,
             });
+            setImagePreview(item.image_url || '');
         }
     }, [item]);
+
+    const handleImageUrlChange = (url: string) => {
+        const convertedUrl = convertGoogleDriveLink(url);
+        setFormData({ ...formData, image_url: convertedUrl });
+        setImagePreview(convertedUrl);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -108,7 +158,7 @@ export default function EditItemModal({ isOpen, onClose, item }: EditItemModalPr
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold text-text-primary mb-2">
-                                Price ($) *
+                                Price (₹) *
                             </label>
                             <input
                                 type="number"
@@ -148,12 +198,64 @@ export default function EditItemModal({ isOpen, onClose, item }: EditItemModalPr
                             Image URL (Optional)
                         </label>
                         <input
-                            type="url"
+                            type="text"
                             value={formData.image_url || ''}
-                            onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                            onChange={(e) => handleImageUrlChange(e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
-                            placeholder="https://example.com/image.jpg"
+                            placeholder="Paste Google Drive link or direct image URL"
                         />
+                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-xs text-blue-800 mb-2">
+                                <span className="font-semibold">💡 How to add images:</span>
+                            </p>
+
+                            <div className="space-y-2">
+                                <div>
+                                    <p className="text-xs font-semibold text-blue-800 mb-1">Option 1: Google Drive</p>
+                                    <ol className="text-xs text-blue-700 space-y-1 ml-4 list-decimal">
+                                        <li>Upload image to Google Drive</li>
+                                        <li>Right-click → Share → "Anyone with the link can view"</li>
+                                        <li>Copy and paste the share link here</li>
+                                    </ol>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs font-semibold text-blue-800 mb-1">Option 2: ImgBB (Recommended)</p>
+                                    <ol className="text-xs text-blue-700 space-y-1 ml-4 list-decimal">
+                                        <li>Go to <a href="https://imgbb.com" target="_blank" className="underline">imgbb.com</a></li>
+                                        <li>Upload your image (no account needed)</li>
+                                        <li>Copy the "Direct link" and paste here</li>
+                                    </ol>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs font-semibold text-blue-800 mb-1">Option 3: Imgur</p>
+                                    <ol className="text-xs text-blue-700 space-y-1 ml-4 list-decimal">
+                                        <li>Go to <a href="https://imgur.com" target="_blank" className="underline">imgur.com</a></li>
+                                        <li>Upload image → Right-click → "Copy image address"</li>
+                                        <li>Paste the link here</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Image Preview */}
+                        {imagePreview && (
+                            <div className="mt-4">
+                                <p className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-2">
+                                    <ImageIcon size={16} />
+                                    Image Preview
+                                </p>
+                                <div className="relative w-full h-48 bg-gray-100 rounded-lg overflow-hidden border border-gray-300">
+                                    <img
+                                        src={imagePreview}
+                                        alt="Preview"
+                                        className="w-full h-full object-cover"
+                                        onError={() => setImagePreview('')}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Preparation Time */}

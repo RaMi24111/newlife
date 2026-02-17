@@ -1,12 +1,18 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 export default function RestaurantLanding() {
   const [isHovered, setIsHovered] = useState(false);
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Only render particles on client-side to avoid hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -69,41 +75,43 @@ export default function RestaurantLanding() {
         />
       </div>
 
-      {/* Floating particles/herbs effect */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {particles.map((particle: { id: number; initialX: number; initialY: number; duration: number; delay: number; size: number }) => (
-          <motion.div
-            key={particle.id}
-            className="absolute"
-            style={{
-              left: `${particle.initialX}%`,
-              top: `${particle.initialY}%`,
-            }}
-            animate={{
-              y: [0, -150, -300],
-              x: [0, Math.sin(particle.id) * 30, Math.sin(particle.id * 2) * 60],
-              opacity: [0, 0.7, 0],
-              rotate: [0, 180, 360],
-            }}
-            transition={{
-              duration: particle.duration,
-              delay: particle.delay,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          >
-            {/* Herb-like shapes */}
-            <div
-              className="bg-gradient-to-br from-green-400/40 to-green-600/40 rounded-full blur-sm"
+      {/* Floating particles/herbs effect - Only render on client */}
+      {isMounted && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {particles.map((particle: { id: number; initialX: number; initialY: number; duration: number; delay: number; size: number }) => (
+            <motion.div
+              key={particle.id}
+              className="absolute"
               style={{
-                width: particle.size * 3,
-                height: particle.size * 6,
-                borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                left: `${particle.initialX}%`,
+                top: `${particle.initialY}%`,
               }}
-            />
-          </motion.div>
-        ))}
-      </div>
+              animate={{
+                y: [0, -150, -300],
+                x: [0, Math.sin(particle.id) * 30, Math.sin(particle.id * 2) * 60],
+                opacity: [0, 0.7, 0],
+                rotate: [0, 180, 360],
+              }}
+              transition={{
+                duration: particle.duration,
+                delay: particle.delay,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            >
+              {/* Herb-like shapes */}
+              <div
+                className="bg-gradient-to-br from-green-400/40 to-green-600/40 rounded-full blur-sm"
+                style={{
+                  width: particle.size * 3,
+                  height: particle.size * 6,
+                  borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+                }}
+              />
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center px-6 py-12">

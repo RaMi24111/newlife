@@ -11,6 +11,7 @@ interface MenuContextType {
     refetchCategories: () => Promise<void>;
     refetchMenuItems: () => Promise<void>;
     addCategory: (data: { name: string; description?: string }) => Promise<void>;
+    deleteCategory: (id: string) => Promise<void>;
     addMenuItem: (data: any) => Promise<void>;
     updateMenuItem: (id: string, data: any) => Promise<void>;
     toggleItemAvailability: (id: string) => Promise<void>;
@@ -93,6 +94,11 @@ export function MenuProvider({ children }: { children: ReactNode }) {
         setMenuItems(prev => prev.filter(item => item.id !== id));
     };
 
+    const deleteCategory = async (id: string) => {
+        await menuService.deleteCategory(id);
+        setCategories(prev => prev.filter(category => category.id !== id));
+    };
+
     const value: MenuContextType = {
         categories,
         menuItems,
@@ -101,6 +107,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
         refetchCategories: fetchCategories,
         refetchMenuItems: fetchMenuItems,
         addCategory,
+        deleteCategory,
         addMenuItem,
         updateMenuItem,
         toggleItemAvailability,

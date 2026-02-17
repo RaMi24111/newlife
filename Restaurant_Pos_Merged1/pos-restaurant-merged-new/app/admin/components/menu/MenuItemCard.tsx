@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Edit2, Trash2, Clock, DollarSign } from 'lucide-react';
+import { Edit2, Clock, DollarSign } from 'lucide-react';
 import { MenuItem } from '../../lib/menu.service';
 import { useMenu } from '../../contexts/MenuContext';
 
@@ -9,10 +9,9 @@ interface MenuItemCardProps {
     item: MenuItem;
     categoryName?: string;
     onEdit: (item: MenuItem) => void;
-    onDelete: (item: MenuItem) => void;
 }
 
-export default function MenuItemCard({ item, categoryName, onEdit, onDelete }: MenuItemCardProps) {
+export default function MenuItemCard({ item, categoryName, onEdit }: MenuItemCardProps) {
     const { toggleItemAvailability } = useMenu();
     const [isToggling, setIsToggling] = React.useState(false);
 
@@ -60,7 +59,7 @@ export default function MenuItemCard({ item, categoryName, onEdit, onDelete }: M
                     </div>
                     <div className="text-right">
                         <div className="text-xl font-bold text-ruby-red">
-                            ${Number(item.price).toFixed(2)}
+                            ₹{Number(item.price).toFixed(2)}
                         </div>
                     </div>
                 </div>
@@ -118,17 +117,10 @@ export default function MenuItemCard({ item, categoryName, onEdit, onDelete }: M
                 <div className="flex gap-2">
                     <button
                         onClick={() => onEdit(item)}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
                         <Edit2 size={16} />
                         Edit
-                    </button>
-                    <button
-                        onClick={() => onDelete(item)}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                    >
-                        <Trash2 size={16} />
-                        Delete
                     </button>
                 </div>
             </div>

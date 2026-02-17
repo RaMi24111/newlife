@@ -15,6 +15,7 @@ export const API_CONFIG = {
         },
         MENU: {
             CATEGORIES: '/api/admin/menu/categories',
+            CATEGORY_BY_ID: (id: string) => `/api/admin/menu/categories/${id}`,
             ITEMS: '/api/admin/menu/items',
             ITEM_BY_ID: (id: string) => `/api/admin/menu/items/${id}`,
             TOGGLE_ITEM: (id: string) => `/api/admin/menu/items/${id}/toggle`,
