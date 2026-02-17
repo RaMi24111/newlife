@@ -90,12 +90,25 @@ export default function EditItemModal({ isOpen, onClose, item }: EditItemModalPr
 
         setIsSubmitting(true);
         try {
-            await updateMenuItem(item.id, {
-                ...formData,
-                description: formData.description || undefined,
-                image_url: formData.image_url || undefined,
-                preparation_time: formData.preparation_time || undefined,
-            });
+            // Only send the specific fields the backend expects
+            const updateData: any = {
+                name: formData.name,
+                price: formData.price,
+                category_id: formData.category_id,
+            };
+
+            // Add optional fields only if they have values
+            if (formData.description) {
+                updateData.description = formData.description;
+            }
+            if (formData.image_url) {
+                updateData.image_url = formData.image_url;
+            }
+            if (formData.preparation_time) {
+                updateData.preparation_time = formData.preparation_time;
+            }
+
+            await updateMenuItem(item.id, updateData);
 
             onClose();
         } catch (error: any) {
