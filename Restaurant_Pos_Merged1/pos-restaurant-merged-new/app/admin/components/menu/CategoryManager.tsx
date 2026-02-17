@@ -70,16 +70,16 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
 
     return (
         <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-serif font-bold text-text-primary flex items-center gap-2">
+            <div className="mb-4">
+                <h2 className="text-xl font-serif font-bold text-text-primary flex items-center gap-2 mb-3">
                     <FolderOpen className="text-ruby-red" size={24} />
                     Categories
                 </h2>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-ruby-red text-white text-sm rounded-lg hover:bg-ruby-red/90 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-ruby-red text-white rounded-lg hover:bg-ruby-red/90 transition-colors"
                 >
-                    <Plus size={16} />
+                    <Plus size={18} />
                     Add Category
                 </button>
             </div>
