@@ -77,9 +77,9 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
                 </h2>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className="flex items-center gap-2 px-4 py-2 bg-ruby-red text-white rounded-lg hover:bg-ruby-red/90 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-ruby-red text-white text-sm rounded-lg hover:bg-ruby-red/90 transition-colors"
                 >
-                    <Plus size={18} />
+                    <Plus size={16} />
                     Add Category
                 </button>
             </div>
@@ -157,8 +157,8 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
                     <div
                         key={category.id}
                         className={`flex items-center gap-2 rounded-lg transition-colors ${selectedCategory === category.id
-                                ? 'bg-ruby-red text-white'
-                                : 'bg-gray-50 text-text-primary hover:bg-gray-100'
+                            ? 'bg-ruby-red text-white'
+                            : 'bg-gray-50 text-text-primary hover:bg-gray-100'
                             }`}
                     >
                         <button
@@ -183,8 +183,8 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
                             }}
                             disabled={deletingId === category.id}
                             className={`px-3 py-3 mr-2 rounded-lg transition-colors ${selectedCategory === category.id
-                                    ? 'hover:bg-white/20 text-white'
-                                    : 'hover:bg-red-100 text-red-600'
+                                ? 'hover:bg-white/20 text-white'
+                                : 'hover:bg-red-100 text-red-600'
                                 } disabled:opacity-50`}
                             title="Delete category"
                         >
