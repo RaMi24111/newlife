@@ -48,7 +48,15 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
                 onSelectCategory(null);
             }
         } catch (error: any) {
-            alert(error.message || 'Failed to delete category');
+            const errorMessage = error.message || 'Failed to delete category';
+
+            // Provide helpful message if category has items
+            if (errorMessage.toLowerCase().includes('existing items') ||
+                errorMessage.toLowerCase().includes('cannot delete')) {
+                alert(`Cannot delete "${categoryName}" because it contains menu items.\n\nPlease delete or move all items in this category first, then try again.`);
+            } else {
+                alert(errorMessage);
+            }
         } finally {
             setDeletingId(null);
         }
