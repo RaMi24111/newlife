@@ -16,10 +16,12 @@ export enum OrderType {
 // Order Status Enum
 export enum OrderStatus {
     PENDING = 'PENDING',
+    PLACED = 'PLACED',
     CONFIRMED = 'CONFIRMED',
     PREPARING = 'PREPARING',
     READY = 'READY',
     COMPLETED = 'COMPLETED',
+    SERVED = 'SERVED',
     CANCELLED = 'CANCELLED'
 }
 
@@ -33,30 +35,37 @@ export enum PaymentStatus {
 // Order Item Interface
 export interface OrderItem {
     id: string;
-    menu_item_id: string;
-    name: string;
+    menu_item_id?: string;
+    name?: string;
+    item_name?: string; // Backend uses item_name in details
     quantity: number;
-    price: number;
-    subtotal: number;
+    price: number | string;
+    subtotal: number | string;
 }
 
 // Order Interface (List View)
 export interface Order {
     id: string;
-    order_type: OrderType;
+    order_type?: OrderType;
     status: OrderStatus;
-    total_amount: number;
+    total_amount: number | string;
     payment_status: PaymentStatus;
-    payment_method?: string;
+    payment_method?: string | null;
     created_at: string;
     updated_at?: string;
+    customer_name?: string | null;
+    customer_phone?: string | null;
+    table_number?: string | null;
+    items?: OrderItem[];
 }
 
 // Order Details Interface (Detail View)
 export interface OrderDetails extends Order {
     items: OrderItem[];
-    subtotal: number;
-    tax: number;
+    subtotal: number | string;
+    tax_amount: number | string;
+    restaurant_id?: string;
+    table_id?: string;
 }
 
 class OrdersService {

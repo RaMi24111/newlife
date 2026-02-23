@@ -39,15 +39,17 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
     };
 
     const getStatusBadge = (status: OrderStatus) => {
-        const styles = {
+        const styles: Record<string, string> = {
             [OrderStatus.PENDING]: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+            [OrderStatus.PLACED]: 'bg-sky-100 text-sky-800 border-sky-300',
             [OrderStatus.CONFIRMED]: 'bg-blue-100 text-blue-800 border-blue-300',
             [OrderStatus.PREPARING]: 'bg-orange-100 text-orange-800 border-orange-300',
             [OrderStatus.READY]: 'bg-purple-100 text-purple-800 border-purple-300',
+            [OrderStatus.SERVED]: 'bg-teal-100 text-teal-800 border-teal-300',
             [OrderStatus.COMPLETED]: 'bg-green-100 text-green-800 border-green-300',
             [OrderStatus.CANCELLED]: 'bg-red-100 text-red-800 border-red-300',
         };
-        return styles[status] || styles[OrderStatus.PENDING];
+        return styles[status] || 'bg-gray-100 text-gray-800 border-gray-300';
     };
 
     const getPaymentStatusBadge = (status: PaymentStatus) => {
@@ -115,7 +117,13 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
                                     <div>
                                         <div className="text-sm text-text-muted mb-1">Order Type</div>
                                         <div className="font-semibold text-text-primary">
-                                            {orderDetails.order_type.replace('_', ' ')}
+                                            {orderDetails.order_type ? orderDetails.order_type.replace('_', ' ') : 'N/A'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-text-muted mb-1">Table</div>
+                                        <div className="font-semibold text-text-primary">
+                                            {orderDetails.table_number ? `Table ${orderDetails.table_number}` : '—'}
                                         </div>
                                     </div>
                                     <div>
@@ -125,10 +133,28 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
                                         </span>
                                     </div>
                                     <div>
+                                        <div className="text-sm text-text-muted mb-1">Customer</div>
+                                        <div className="font-semibold text-text-primary">
+                                            {orderDetails.customer_name || '—'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-text-muted mb-1">Phone</div>
+                                        <div className="font-semibold text-text-primary">
+                                            {orderDetails.customer_phone || '—'}
+                                        </div>
+                                    </div>
+                                    <div>
                                         <div className="text-sm text-text-muted mb-1">Payment</div>
                                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getPaymentStatusBadge(orderDetails.payment_status)}`}>
                                             {orderDetails.payment_status}
                                         </span>
+                                    </div>
+                                    <div>
+                                        <div className="text-sm text-text-muted mb-1">Date</div>
+                                        <div className="text-sm font-semibold text-text-primary">
+                                            {new Date(orderDetails.created_at).toLocaleString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -152,7 +178,7 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
                                         <tbody className="divide-y divide-gray-200">
                                             {orderDetails.items.map((item) => (
                                                 <tr key={item.id}>
-                                                    <td className="px-4 py-3 text-text-primary">{item.name}</td>
+                                                    <td className="px-4 py-3 text-text-primary">{item.name || item.item_name}</td>
                                                     <td className="px-4 py-3 text-center text-text-primary">{item.quantity}</td>
                                                     <td className="px-4 py-3 text-right text-text-primary">
                                                         ₹{Number(item.price).toFixed(2)}
@@ -177,7 +203,7 @@ export default function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDet
                                     </div>
                                     <div className="flex justify-between text-text-primary">
                                         <span>Tax</span>
-                                        <span className="font-semibold">₹{Number(orderDetails.tax).toFixed(2)}</span>
+                                        <span className="font-semibold">₹{Number(orderDetails.tax_amount).toFixed(2)}</span>
                                     </div>
                                     <div className="border-t border-gray-300 pt-2 mt-2">
                                         <div className="flex justify-between text-lg font-bold text-ruby-red">
