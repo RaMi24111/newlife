@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, ArrowLeft } from 'lucide-react';
+import { Search, Filter, ArrowLeft, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { OrdersProvider, useOrders } from '../../contexts/OrdersContext';
@@ -17,6 +17,7 @@ function OrdersManagementContent() {
     const [typeFilter, setTypeFilter] = useState<OrderType | 'ALL'>('ALL');
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [dateFilter, setDateFilter] = useState('');
 
     // Filter orders
     const filteredOrders = useMemo(() => {
@@ -28,9 +29,14 @@ function OrdersManagementContent() {
             const matchesPayment = paymentFilter === 'ALL' || order.payment_status === paymentFilter;
             const matchesType = typeFilter === 'ALL' || order.order_type === typeFilter;
 
-            return matchesSearch && matchesStatus && matchesPayment && matchesType;
+            const matchesDate = !dateFilter || (() => {
+                const orderDate = new Date(order.created_at).toISOString().slice(0, 10);
+                return orderDate === dateFilter;
+            })();
+
+            return matchesSearch && matchesStatus && matchesPayment && matchesType && matchesDate;
         });
-    }, [orders, searchQuery, statusFilter, paymentFilter, typeFilter]);
+    }, [orders, searchQuery, statusFilter, paymentFilter, typeFilter, dateFilter]);
 
     const handleViewDetails = (order: Order) => {
         setSelectedOrderId(order.id);
@@ -98,7 +104,7 @@ function OrdersManagementContent() {
                             <Filter size={20} className="text-text-muted" />
                             <h3 className="font-semibold text-text-primary">Filters</h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             {/* Search */}
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted" size={20} />
@@ -149,6 +155,25 @@ function OrdersManagementContent() {
                                 <option value={OrderType.TAKEAWAY}>Takeaway</option>
                                 <option value={OrderType.DELIVERY}>Delivery</option>
                             </select>
+
+                            {/* Date Filter */}
+                            <div className="relative flex items-center">
+                                <input
+                                    type="date"
+                                    value={dateFilter}
+                                    onChange={(e) => setDateFilter(e.target.value)}
+                                    className="w-full px-4 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                                />
+                                {dateFilter && (
+                                    <button
+                                        onClick={() => setDateFilter('')}
+                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        title="Clear date filter"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
 
