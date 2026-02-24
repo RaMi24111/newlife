@@ -81,18 +81,10 @@ function OrdersManagementContent() {
                     )}
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
                             <div className="text-text-muted text-sm mb-1">Total Orders</div>
                             <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
-                        </div>
-                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
-                            <div className="text-text-muted text-sm mb-1">Placed</div>
-                            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-                        </div>
-                        <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
-                            <div className="text-text-muted text-sm mb-1">Served</div>
-                            <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
                         </div>
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
                             <div className="text-text-muted text-sm mb-1">Total Revenue</div>
