@@ -43,12 +43,10 @@ function OrdersManagementContent() {
         setShowDetailsModal(true);
     };
 
-    // Stats
+    // Stats — based on currently filtered orders
     const stats = {
-        total: orders.length,
-        pending: orders.filter(o => o.status === OrderStatus.PENDING || o.status === OrderStatus.PLACED).length,
-        completed: orders.filter(o => o.status === OrderStatus.COMPLETED || o.status === OrderStatus.SERVED).length,
-        revenue: orders
+        total: filteredOrders.length,
+        revenue: filteredOrders
             .filter(o => o.payment_status === PaymentStatus.PAID)
             .reduce((sum, o) => sum + Number(o.total_amount), 0),
     };
