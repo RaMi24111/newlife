@@ -97,6 +97,7 @@ export default function OrdersTable({ orders, onViewDetails }: OrdersTableProps)
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">Order ID</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">Type</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">Customer</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">Table</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-text-primary uppercase tracking-wider">Items</th>
@@ -120,11 +121,13 @@ export default function OrdersTable({ orders, onViewDetails }: OrdersTableProps)
                                         <div className="font-mono text-sm font-semibold text-text-primary">
                                             #{order.id.slice(0, 8)}
                                         </div>
-                                        {order.order_type && (
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border mt-1 ${orderType.style}`}>
-                                                {orderType.label}
-                                            </span>
-                                        )}
+                                    </td>
+
+                                    {/* Order Type */}
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${orderType.style}`}>
+                                            {orderType.label}
+                                        </span>
                                     </td>
 
                                     {/* Customer */}

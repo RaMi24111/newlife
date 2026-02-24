@@ -95,6 +95,7 @@ export default function EditItemModal({ isOpen, onClose, item }: EditItemModalPr
                 name: formData.name,
                 price: formData.price,
                 category_id: formData.category_id,
+                is_available: formData.is_available,
             };
 
             // Add optional fields only if they have values
