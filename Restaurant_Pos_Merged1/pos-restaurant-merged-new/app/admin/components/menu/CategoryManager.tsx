@@ -15,11 +15,22 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
     const [newCategory, setNewCategory] = useState({ name: '', description: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [duplicateError, setDuplicateError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newCategory.name.trim()) return;
 
+        // Check for duplicate category name (case-insensitive)
+        const isDuplicate = categories.some(
+            (cat) => cat.name.toLowerCase() === newCategory.name.trim().toLowerCase()
+        );
+        if (isDuplicate) {
+            setDuplicateError(`A category named "${newCategory.name.trim()}" already exists.`);
+            return;
+        }
+
+        setDuplicateError('');
         setIsSubmitting(true);
         try {
             await addCategory({
@@ -103,11 +114,17 @@ export default function CategoryManager({ selectedCategory, onSelectCategory }: 
                             <input
                                 type="text"
                                 value={newCategory.name}
-                                onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
+                                onChange={(e) => {
+                                    setNewCategory({ ...newCategory, name: e.target.value });
+                                    setDuplicateError('');
+                                }}
+                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent ${duplicateError ? 'border-red-400' : 'border-gray-300'}`}
                                 placeholder="e.g., Appetizers, Main Course"
                                 required
                             />
+                            {duplicateError && (
+                                <p className="mt-1 text-xs text-red-600 font-medium">{duplicateError}</p>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-text-primary mb-1">
