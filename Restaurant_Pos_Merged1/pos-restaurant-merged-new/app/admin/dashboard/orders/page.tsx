@@ -40,8 +40,8 @@ function OrdersManagementContent() {
     // Stats
     const stats = {
         total: orders.length,
-        pending: orders.filter(o => o.status === OrderStatus.PENDING).length,
-        completed: orders.filter(o => o.status === OrderStatus.COMPLETED).length,
+        pending: orders.filter(o => o.status === OrderStatus.PENDING || o.status === OrderStatus.PLACED).length,
+        completed: orders.filter(o => o.status === OrderStatus.COMPLETED || o.status === OrderStatus.SERVED).length,
         revenue: orders
             .filter(o => o.payment_status === PaymentStatus.PAID)
             .reduce((sum, o) => sum + Number(o.total_amount), 0),
@@ -87,11 +87,11 @@ function OrdersManagementContent() {
                             <div className="text-2xl font-bold text-text-primary">{stats.total}</div>
                         </div>
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
-                            <div className="text-text-muted text-sm mb-1">Pending</div>
+                            <div className="text-text-muted text-sm mb-1">Placed</div>
                             <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
                         </div>
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
-                            <div className="text-text-muted text-sm mb-1">Completed</div>
+                            <div className="text-text-muted text-sm mb-1">Served</div>
                             <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
                         </div>
                         <div className="bg-white rounded-lg shadow p-4 border border-gray-100">
@@ -126,11 +126,11 @@ function OrdersManagementContent() {
                                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ruby-red focus:border-transparent"
                             >
                                 <option value="ALL">All Status</option>
-                                <option value={OrderStatus.PENDING}>Pending</option>
+                                <option value={OrderStatus.PLACED}>Placed</option>
                                 <option value={OrderStatus.CONFIRMED}>Confirmed</option>
                                 <option value={OrderStatus.PREPARING}>Preparing</option>
                                 <option value={OrderStatus.READY}>Ready</option>
-                                <option value={OrderStatus.COMPLETED}>Completed</option>
+                                <option value={OrderStatus.SERVED}>Served</option>
                                 <option value={OrderStatus.CANCELLED}>Cancelled</option>
                             </select>
 
