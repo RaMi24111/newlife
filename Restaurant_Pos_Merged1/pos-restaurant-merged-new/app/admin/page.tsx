@@ -900,6 +900,18 @@ const STATS = [
   { ico: '⭐', n: '4.9', l: 'Guest Rating' },
 ];
 
+/* ═══════════════════════ DEFAULTS ═══════════════════════ */
+const DEFAULTS = {
+  name: 'Zaika',
+  nameSub: 'Royal',
+  fullName: 'Zaika Royal',
+  city: 'Old Delhi',
+  address: '12 Royal Heritage Lane',
+  pincode: '110006',
+  phone: '+91 98765 43210',
+  description: 'Born in 2008 from a family kitchen in the heart of Old Delhi, Zaika Royal has grown into one of the capital\'s most celebrated fine-dining destinations. This portal puts every aspect of operations at your fingertips — live orders, staff, tables, and reports.',
+};
+
 /* ═══════════════════════ COMPONENT ═══════════════════════ */
 export default function AdminLanding() {
   const coRef = useRef<HTMLDivElement>(null);
@@ -913,6 +925,31 @@ export default function AdminLanding() {
   const [sc, setSc] = useState(false);
   /* splash: 'show' → 'exit' → 'done' */
   const [splash, setSplash] = useState<'show' | 'exit' | 'done'>('show');
+  const [resto, setResto] = useState(DEFAULTS);
+
+  /* ── Fetch restaurant details (best-effort, no auth) ── */
+  useEffect(() => {
+    fetch('https://superconservatively-drouthiest-karoline.ngrok-free.dev/api/admin/restaurant', {
+      headers: { 'ngrok-skip-browser-warning': 'true' },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        const nameParts = (data.name || DEFAULTS.fullName).split(' ');
+        const nameSub = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+        setResto({
+          name: nameParts[0] || DEFAULTS.name,
+          nameSub: nameSub || DEFAULTS.nameSub,
+          fullName: data.name || DEFAULTS.fullName,
+          city: data.city || DEFAULTS.city,
+          address: data.address || DEFAULTS.address,
+          pincode: data.pincode || DEFAULTS.pincode,
+          phone: data.phone || DEFAULTS.phone,
+          description: data.description || DEFAULTS.description,
+        });
+      })
+      .catch(() => {/* keep defaults */ });
+  }, []);
 
   /* ── Splash timer: animate 3.4s then curtain-exit ── */
   useEffect(() => {
@@ -1008,14 +1045,14 @@ export default function AdminLanding() {
               <div className="splash-corner sp-bl" />
               <div className="splash-corner sp-br" />
               <div style={{ position: 'relative', zIndex: 2, textAlign: 'center' }}>
-                <div className="splash-name">Zaika</div>
+                <div className="splash-name">{resto.name}</div>
                 <div className="splash-rule">
                   <div className="sr-l" /><div className="sr-dot" />
                   <div className="sr-d" />
                   <div className="sr-dot" /><div className="sr-l" />
                 </div>
-                <div className="splash-sub">Royal</div>
-                <div className="splash-tag">Restaurant Management System · Est. 2008</div>
+                {resto.nameSub && <div className="splash-sub">{resto.nameSub}</div>}
+                <div className="splash-tag">Restaurant Management System</div>
               </div>
               <div className="splash-loader">
                 <div className="splash-bar-track"><div className="splash-bar-fill" /></div>
@@ -1038,7 +1075,7 @@ export default function AdminLanding() {
       {/* NAV */}
       <nav className={sc ? 'sc' : ''}>
         <div className="nav-wordmark">
-          <span className="nav-w1">Zaika Royal</span>
+          <span className="nav-w1">{resto.fullName}</span>
           <span className="nav-w2">Staff & Admin Portal</span>
         </div>
         <a href="/admin/login" className="nav-cta"><span>Access Dashboard</span></a>
@@ -1062,11 +1099,11 @@ export default function AdminLanding() {
           <div className="hero-l">
             <div className="h-badge">
               <div className="h-badge-line" />
-              <span className="h-badge-txt">Staff &amp; Admin Portal · Est. 2008</span>
+              <span className="h-badge-txt">Staff &amp; Admin Portal · {resto.city}</span>
             </div>
 
-            <h1 className="h-name">Zaika</h1>
-            <p className="h-name-sub">Royal</p>
+            <h1 className="h-name">{resto.name}</h1>
+            {resto.nameSub && <p className="h-name-sub">{resto.nameSub}</p>}
 
             <div className="h-rule">
               <div className="h-rule-l" /><div className="h-rule-dot" />
@@ -1076,7 +1113,7 @@ export default function AdminLanding() {
 
             <p className="h-desc">
               Restaurant Management System<br />
-              Old Delhi · Since 2008
+              {resto.city}
             </p>
 
             <a href="/admin/login" className="h-btn">
@@ -1123,7 +1160,7 @@ export default function AdminLanding() {
           <div className="gold-rule"><div className="gr-l" /><div className="gr-d" /><div className="gr-l" /></div>
           <h2 className="sec-h">Where Every Plate<br />Tells a <em>Story</em></h2>
           <p className="sec-p">
-            Born in 2008 from a family kitchen in the heart of Old Delhi, Zaika Royal has grown into one of the capital's most celebrated fine-dining destinations. This portal puts every aspect of operations at your fingertips — live orders, staff, tables, and reports.
+            {resto.description}
           </p>
           <p className="sec-p" style={{ marginTop: 10 }}>
             Built for speed, precision, and ease — so your team can focus on what matters: delivering an unforgettable experience every service.
@@ -1231,7 +1268,7 @@ export default function AdminLanding() {
         <div className="q-content rv">
           <span className="q-mark">"</span>
           <p className="q-text">A great restaurant runs on two things —<br />exceptional food and an exceptional team.</p>
-          <p className="q-attr">— Chef Rajesh Khanna, Founder · Zaika Royal</p>
+          <p className="q-attr">— Founder · {resto.fullName}</p>
         </div>
       </div>
 
@@ -1250,8 +1287,8 @@ export default function AdminLanding() {
       <footer>
         <div className="ft-top">
           <div>
-            <span className="ft-brand">Zaika Royal</span>
-            <p className="ft-desc">Internal management portal for Zaika Royal restaurant, Old Delhi. For access issues contact your system administrator.</p>
+            <span className="ft-brand">{resto.fullName}</span>
+            <p className="ft-desc">Internal management portal for {resto.fullName}, {resto.city}. For access issues contact your system administrator.</p>
           </div>
           <div>
             <div className="ft-col-h">Navigate</div>
@@ -1264,14 +1301,14 @@ export default function AdminLanding() {
           <div>
             <div className="ft-col-h">Contact</div>
             <div className="ft-contact">
-              📞 +91 98765 43210<br />
-              📍 12 Royal Heritage Lane<br />
-              Old Delhi — 110006
+              📞 {resto.phone}<br />
+              📍 {resto.address}<br />
+              {resto.city} — {resto.pincode}
             </div>
           </div>
         </div>
         <div className="ft-bottom">
-          <span className="ft-copy">© 2024 Zaika Royal. All rights reserved.</span>
+          <span className="ft-copy">© {new Date().getFullYear()} {resto.fullName}. All rights reserved.</span>
           <span className="ft-ver">v2.4.1 · Admin Build</span>
         </div>
       </footer>
